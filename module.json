@@ -13,7 +13,7 @@
     }
   ],
   "manifest": "https://raw.githubusercontent.com/WanderWal/skillsy/refs/heads/main/module.json",
-  "download": "https://github.com/WanderWal/skilsy/archive/refs/tags/1.0.0.zip",
+  "download": "https://github.com/WanderWal/skillsy/archive/refs/tags/1.0.0.zip",
   "esmodules": ["scripts/main.js"],
   "styles": ["styles/module.css"],
   "languages": [
