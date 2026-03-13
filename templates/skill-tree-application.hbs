@@ -1,0 +1,50 @@
+<div class="standard-form">
+
+    <div class="skill-groups scrollable">
+        {{#each groups as |group|}}
+        <div class="skill-group" style="--group-color: {{group.color}};" data-group-id="{{group.id}}">
+            {{#if group.image}}
+            <img class="group-background {{#if group.blurBackground}}blur-background{{/if}}" src="{{group.image}}" alt="{{group.name}}" title="{{group.name}}" />
+            {{/if}}
+            <div class="h1-container">
+                <h1>{{group.name}}</h1>
+            </div>
+            <div class="button-container">
+                <button type="button" name="move-left" data-id="{{group.id}}"><i class="fas fa-arrow-left"></i></button>
+                <button type="button" name="move-right" data-id="{{group.id}}"><i class="fas fa-arrow-right"></i></button>
+                <button type="button" name="edit-group" data-id="{{group.id}}"><i class="fas fa-edit"></i></button>
+                <button type="button" name="delete-group" data-id="{{group.id}}"><i class="fas fa-trash"></i></button>
+            </div>
+
+
+            <div class="skill-grid" style="grid-template: {{group.gridTemplate}};">
+                {{#each group.children as |skill|}}
+                {{#if skill.name}}
+                <div class="skill-container {{#if skill.overrideStyle}}{{skill.overrideStyleClass}}{{else}}{{#if ../../useCircleStyle}}round{{/if}}{{/if}}" draggable="true" data-row="{{skill.row}}" data-col="{{skill.col}}"
+                    data-uuid="{{skill.uuid}}" data-tooltip-class="skill-tree-tooltip" data-tooltip="{{skill.tooltip}}">
+                    <img src="{{skill.src}}" alt="{{skill.name}}" title="{{skill.name}}" />
+                    {{#if skill.points}}
+                    <span>0/{{skill.points}}</span>
+                    {{/if}}
+                </div>
+                {{else}}
+                <div class="skill-container empty" data-row="{{skill.row}}" data-col="{{skill.col}}">
+                </div>
+                {{/if}}
+                {{/each}}
+            </div>
+
+
+        </div>
+        {{/each}}
+    </div>
+
+
+
+    <footer class="form-footer">
+        <button type="button" name="new-group"><i class="fas fa-plus"></i> {{localize
+            "skill-tree.skill-tree-application.new-group"}}</button>
+        <button type="button" name="configure-skill-tree"><i class="fas fa-cog"></i> {{localize "skill-tree.skill-tree-application.configure-skill-tree"}}</button>
+        <button type="button" name="close"><i class="fas fa-times"></i>{{localize "Close"}}</button>
+    </footer>
+</div>

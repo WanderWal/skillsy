@@ -1,0 +1,350 @@
+.skill-tree-manager table {
+  margin-left: 0;
+  margin-right: 0;
+}
+.skill-tree-manager table tr td:first-of-type {
+  width: 90%;
+}
+.skill-tree-manager table button {
+  width: auto;
+  padding: 0.5rem;
+}
+.skill-tree-manager table button i {
+  margin: 0;
+}
+
+.skill-tree-application .window-content,
+.skill-tree-actor .window-content {
+  max-width: 80vw;
+  max-height: 95vh;
+}
+.skill-tree-application div[data-application-part=content],
+.skill-tree-actor div[data-application-part=content] {
+  align-items: center;
+}
+.skill-tree-application .skill-groups,
+.skill-tree-actor .skill-groups {
+  display: flex;
+  padding-top: calc(0.5 * var(--font-h1-size));
+  padding-bottom: calc(0.5 * var(--font-h1-size));
+  gap: 1rem;
+  overflow: auto;
+  width: min-content;
+  max-width: 100%;
+}
+.skill-tree-application .skill-groups .skill-group,
+.skill-tree-actor .skill-groups .skill-group {
+  position: relative;
+  display: flex;
+  min-height: 400px;
+  height: fit-content;
+  --group-color: #ffffff;
+  border: 4px solid var(--group-color);
+  box-shadow: 0 0 5px var(--group-color) inset, 0 0 5px var(--group-color);
+  border-radius: 5px;
+  padding: 1rem;
+  background-size: cover;
+  background-repeat: no-repeat;
+  background-position: center;
+}
+.skill-tree-application .skill-groups .skill-group img.group-background,
+.skill-tree-actor .skill-groups .skill-group img.group-background {
+  position: absolute;
+  object-fit: cover;
+  object-position: center;
+  z-index: 0;
+  width: 100%;
+  height: 100%;
+  top: 0;
+  left: 0;
+  pointer-events: none;
+}
+.skill-tree-application .skill-groups .skill-group img.group-background.blur-background,
+.skill-tree-actor .skill-groups .skill-group img.group-background.blur-background {
+  filter: blur(5px);
+}
+.skill-tree-application .skill-groups .skill-group svg,
+.skill-tree-actor .skill-groups .skill-group svg {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 1;
+}
+.skill-tree-application .skill-groups .skill-group .h1-container,
+.skill-tree-actor .skill-groups .skill-group .h1-container {
+  position: absolute;
+  transform: translate(-1rem, calc(-1.5rem - 50%));
+  width: 100%;
+  pointer-events: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2;
+}
+.skill-tree-application .skill-groups .skill-group .h1-container span,
+.skill-tree-actor .skill-groups .skill-group .h1-container span {
+  color: black;
+  background-color: var(--group-color);
+  box-shadow: 0 0 2px black, 0 0 2px black inset;
+  margin-right: 0.3rem;
+  border: 1px solid black;
+  border-radius: 50%;
+  aspect-ratio: 1;
+  display: flex;
+  padding: 0.1rem;
+  justify-content: center;
+  align-items: center;
+  width: 1.5rem;
+  font-family: var(--font-h1);
+  font-weight: bold;
+}
+.skill-tree-application .skill-groups .skill-group .h1-container h1,
+.skill-tree-actor .skill-groups .skill-group .h1-container h1 {
+  margin: 0;
+  border-bottom: none;
+  color: var(--group-color);
+  text-shadow: 0 0 2px black, 0 0 2px black, 0 0 2px black, 0 0 2px black, 0 0 2px black, 0 0 2px black, 0 0 2px black, 0 0 2px black, 0 0 2px black, 0 0 2px black;
+}
+.skill-tree-application .skill-groups .skill-group .button-container,
+.skill-tree-actor .skill-groups .skill-group .button-container {
+  display: flex;
+  gap: 0.5rem;
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  transform: translate(0, 50%);
+  z-index: 2;
+}
+.skill-tree-application .skill-groups .skill-group .button-container button,
+.skill-tree-actor .skill-groups .skill-group .button-container button {
+  aspect-ratio: 1;
+}
+.skill-tree-application .skill-groups .skill-group .button-container button i,
+.skill-tree-actor .skill-groups .skill-group .button-container button i {
+  margin: 0;
+}
+.skill-tree-application .skill-groups .skill-group .skill-grid,
+.skill-tree-actor .skill-groups .skill-group .skill-grid {
+  display: grid;
+  height: min-content;
+  width: min-content;
+  gap: 1.5rem;
+  z-index: 2;
+}
+.skill-tree-application .skill-groups .skill-group .skill-grid .skill-container,
+.skill-tree-actor .skill-groups .skill-group .skill-grid .skill-container {
+  width: var(--font-h1-size);
+  height: var(--font-h1-size);
+  border: 1px solid;
+  cursor: pointer;
+  position: relative;
+  box-shadow: 0 0 5px 1px black inset;
+}
+.skill-tree-application .skill-groups .skill-group .skill-grid .skill-container.round,
+.skill-tree-actor .skill-groups .skill-group .skill-grid .skill-container.round {
+  border-radius: 50%;
+}
+.skill-tree-application .skill-groups .skill-group .skill-grid .skill-container.round img,
+.skill-tree-actor .skill-groups .skill-group .skill-grid .skill-container.round img {
+  border-radius: 50%;
+}
+.skill-tree-application .skill-groups .skill-group .skill-grid .skill-container img,
+.skill-tree-actor .skill-groups .skill-group .skill-grid .skill-container img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  pointer-events: none;
+  position: absolute;
+  z-index: -1;
+  border: none;
+}
+.skill-tree-application .skill-groups .skill-group .skill-grid .skill-container.empty,
+.skill-tree-actor .skill-groups .skill-group .skill-grid .skill-container.empty {
+  border-style: dashed;
+  cursor: default;
+}
+.skill-tree-application .skill-groups .skill-group .skill-grid .skill-container span,
+.skill-tree-actor .skill-groups .skill-group .skill-grid .skill-container span {
+  font-size: var(--font-size-12);
+  position: absolute;
+  bottom: 0;
+  transform: translate(25%, 25%);
+  background-color: var(--color-cool-5-90);
+  backdrop-filter: blur(2px);
+  padding: 0.1rem 0.3rem;
+  border-radius: 5px;
+  border: 1px solid var(--group-color);
+  pointer-events: none;
+  right: 0;
+  color: var(--color-light-1);
+}
+
+.skill-tree-tooltip figure {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  position: relative;
+  margin: 0;
+}
+.skill-tree-tooltip figure img {
+  width: var(--font-h1-size);
+  height: var(--font-h1-size);
+  object-fit: cover;
+  margin: 0;
+  position: absolute;
+  border-radius: 0;
+  width: 100%;
+  height: 100%;
+  z-index: -1;
+  filter: blur(5px);
+}
+.skill-tree-tooltip figure h1 {
+  margin: 0;
+  border: none;
+  width: 100%;
+  text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000;
+  filter: drop-shadow(0px 0px 3px black);
+  line-height: normal;
+  padding: 1rem 0rem;
+}
+.skill-tree-tooltip .mutual-exclusion {
+  font-weight: bolder;
+}
+.skill-tree-tooltip > p {
+  text-align: left;
+}
+.skill-tree-tooltip .skill-requirements {
+  display: flex;
+  flex-wrap: wrap;
+  font-size: small;
+  margin-top: 0.5rem;
+  align-items: center;
+}
+.skill-tree-tooltip .skill-requirements:not(:has(span)) {
+  display: none;
+}
+.skill-tree-tooltip .skill-requirements span.requirement {
+  border: 1px solid;
+  border-radius: 5px;
+  padding: 0rem 0.15rem;
+  margin: 0 0.2rem;
+  margin-top: 0.2rem;
+  font-size: smaller;
+}
+.skill-tree-tooltip .skill-requirements span.requirement.invalid {
+  color: darkred;
+}
+
+.skill-tree-actor.fullscreen {
+  width: 100vw !important;
+  height: 100vh !important;
+  left: 0 !important;
+  top: 0 !important;
+}
+.skill-tree-actor.fullscreen div[data-application-part=content] {
+  width: 100% !important;
+  height: 100% !important;
+  display: flex;
+  justify-content: center;
+}
+.skill-tree-actor.fullscreen .skill-groups {
+  min-width: 100%;
+}
+.skill-tree-actor.fullscreen nav {
+  position: absolute;
+  top: 5px;
+  left: 0;
+  width: 99%;
+}
+.skill-tree-actor .skill-groups {
+  padding-bottom: 0;
+}
+.skill-tree-actor .skill-groups .skill-group .skill-grid .skill-container:not(.is-unlocked) img,
+.skill-tree-actor .skill-groups .skill-group .skill-grid .skill-container:not(.is-unlocked) span {
+  filter: grayscale(1);
+}
+.skill-tree-actor .skill-groups .skill-group .skill-grid .skill-container.can-be-unlocked {
+  border: 2px dashed var(--group-color);
+}
+.skill-tree-actor .skill-groups .skill-group .skill-grid .skill-container.excluded {
+  border-color: red;
+  border-style: solid;
+}
+.skill-tree-actor .skill-groups .skill-group .skill-grid .skill-container.is-unlocked {
+  border-style: solid;
+}
+.skill-tree-actor .skill-groups .skill-group .skill-grid .skill-container.empty {
+  pointer-events: none;
+  opacity: 0;
+}
+.skill-tree-actor nav {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  --points-input-size: calc(var(--font-h1-size) * 1.5);
+  min-width: 25vw;
+  width: 100%;
+  padding: 0.3rem;
+}
+.skill-tree-actor nav select {
+  width: min-content;
+  height: min-content;
+  font-size: var(--points-input-size);
+  background: transparent;
+  font-family: var(--font-h1);
+  text-align: center;
+  border: none;
+}
+.skill-tree-actor nav select option {
+  background: var(--input-background-color);
+}
+.skill-tree-actor nav .input-wrapper {
+  min-width: var(--points-input-size);
+  max-width: var(--points-input-size);
+  min-height: var(--points-input-size);
+  max-height: var(--points-input-size);
+  position: absolute;
+  right: 0;
+}
+.skill-tree-actor nav .input-wrapper input[type=number] {
+  font-size: var(--font-h1-size);
+  min-width: var(--points-input-size);
+  max-width: var(--points-input-size);
+  min-height: var(--points-input-size);
+  max-height: var(--points-input-size);
+  text-align: center;
+  border-radius: 50%;
+  background-position: center;
+  background-size: cover;
+  background-repeat: no-repeat;
+  text-shadow: 0 0 2px black, 0 0 2px black, 0 0 2px black, 0 0 2px black, 0 0 2px black, 0 0 2px black, 0 0 2px black, 0 0 2px black, 0 0 2px black, 0 0 2px black;
+  color: var(--color-light-1);
+  border: none;
+}
+.skill-tree-actor nav .input-wrapper span {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  background: rgba(0, 0, 0, 0.1098039216);
+  border-radius: 50%;
+  border: 3px solid;
+  width: calc(var(--points-input-size) * 0.35);
+  height: calc(var(--points-input-size) * 0.35);
+  text-align: center;
+  pointer-events: none;
+  border-color: var(--color-cool-3);
+  box-shadow: 0 0 3px black;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  transform: translate(25%, 25%);
+}
+.skill-tree-actor nav h1 {
+  margin: 0;
+  border: none;
+  font-size: var(--points-input-size);
+}/*# sourceMappingURL=module.css.map */

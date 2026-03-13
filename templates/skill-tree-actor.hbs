@@ -1,0 +1,60 @@
+<div class="standard-form">
+
+    <nav>
+        <select name="selectedSkillTree">
+            {{#each skillTreesOptions as |skillTree|}}
+            <option value="{{skillTree.key}}" {{#if skillTree.selected}}selected{{/if}}>{{localize skillTree.label}}
+            </option>
+            {{/each}}
+        </select>
+
+        <div class="input-wrapper">
+        <input style="{{#unless canEditPoints}}pointer-events: none;{{/unless}}{{#if pointsImage}}background-image: url('{{pointsImage}}');{{/if}}" type="number" name="skillPoints" value="{{skillPoints}}" />
+        <span>{{skillTreePoints}}</span>
+        </div>
+    </nav>
+
+    <div class="skill-groups">
+        {{#each groups as |group|}}
+        <div class="skill-group {{#if group.blurBackground}}blur-background{{/if}}"
+            style="--group-color: {{group.color}}; background-image: url('{{group.image}}');"
+            data-group-id="{{group.id}}">
+
+            {{#if group.image}}
+            <img class="group-background {{#if group.blurBackground}}blur-background{{/if}}" src="{{group.image}}"
+                alt="{{group.name}}" title="{{group.name}}" />
+            {{/if}}
+
+            <div class="h1-container">
+                {{#unless group.hideTotal}}
+                <span>{{group.totalPoints}}</span>
+                {{/unless}}
+                <h1>{{group.name}}</h1>
+            </div>
+
+
+            <div class="skill-grid" style="grid-template: {{group.gridTemplate}};">
+                {{#each group.children as |skill|}}
+                {{#if skill.name}}
+                <div class="skill-container {{#if skill.skillHelper.overrideStyle}}{{skill.skillHelper.overrideStyleClass}}{{else}}{{#if ../../useCircleStyle}}round{{/if}}{{/if}} {{#if skill.skillHelper.excluded}}excluded{{/if}} {{#if skill.skillHelper.canBeUnlocked}}can-be-unlocked{{/if}} {{#if skill.skillHelper.isUnlocked}}is-unlocked{{/if}}"
+                    data-row="{{skill.row}}" data-col="{{skill.col}}" data-uuid="{{skill.uuid}}"
+                    data-tooltip-class="skill-tree-tooltip" data-tooltip="{{skill.tooltip}}"
+                    style="{{#if skill.skillHelper.skillData.color}}--group-color: {{skill.skillHelper.skillData.color}}; {{/if}}"
+                    >
+                    <img src="{{skill.src}}" alt="{{skill.name}}" title="{{skill.name}}" />
+                    {{#if skill.skillHelper.showPointsCount}}
+                    <span>{{skill.skillHelper.points.value}}/{{skill.skillHelper.points.max}}</span>
+                    {{/if}}
+                </div>
+                {{else}}
+                <div class="skill-container empty" data-row="{{skill.row}}" data-col="{{skill.col}}">
+                </div>
+                {{/if}}
+                {{/each}}
+            </div>
+
+
+        </div>
+        {{/each}}
+    </div>
+</div>

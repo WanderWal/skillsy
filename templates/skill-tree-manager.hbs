@@ -1,0 +1,32 @@
+<div style="max-height: 70vh;">
+    <table>
+        <thead>
+            <tr>
+                <th>{{localize "skill-tree.skill-tree-manager.name"}}</th>
+                <th>{{localize "skill-tree.skill-tree-manager.edit"}}</th>
+                <th>{{localize "skill-tree.skill-tree-manager.permissions"}}</th>
+                <th>{{localize "skill-tree.skill-tree-manager.delete"}}</th>
+            </tr>
+        </thead>
+        <tbody>
+            {{#each skillTrees as |skillTree|}}
+            <tr>
+                <td>{{skillTree.name}}</td>
+                <td><button type="button" name="edit" data-uuid="{{skillTree.uuid}}"><i
+                            class="fas fa-edit"></i></button></td>
+                <td><button type="button" name="permissions" data-uuid="{{skillTree.uuid}}"><i
+                            class="fas fa-user-lock"></i></button></td>
+                <td><button type="button" name="delete" data-uuid="{{skillTree.uuid}}"><i
+                            class="fas fa-trash"></i></button></td>
+            </tr>
+            {{/each}}
+        </tbody>
+    </table>
+
+
+
+    <footer>
+        <button type="button" name="create-new"><i class="fas fa-plus"></i> {{localize
+            "skill-tree.skill-tree-manager.create-new"}}</button>
+    </footer>
+</div>

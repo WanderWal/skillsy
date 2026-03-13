@@ -1,0 +1,80 @@
+{
+    "skill-tree": {
+        "header-button": {
+            "label": "Fähigkeitsbaum"
+        },
+        "settings": {
+            "skill-tree-manager": {
+                "hint": "Verwalten Sie Ihre Fähigkeitsbäume",
+                "label": "Fertigkeitsbäume konfigurieren",
+                "name": "Fähigkeitsbaum-Manager"
+            }
+        },
+        "skill-tree-actor": {
+            "added-items": "Hinzugefügte Artikel:",
+            "mutual-exclusion-info": "Nur %n Fertigkeiten mit den gleichen Anforderungen wie diese Fertigkeit können gleichzeitig freigeschaltet werden.",
+            "removed-items": "Entfernte Elemente:",
+            "title": "Fähigkeitsbaum:"
+        },
+        "skill-tree-application": {
+            "delete-group-content": "Sind Sie sicher, dass Sie diese Gruppe löschen möchten? \nDadurch werden auch alle Fertigkeiten in der Gruppe gelöscht.",
+            "delete-group-title": "Gruppe löschen",
+            "drop-error": "Sie können nur Gegenstände oder andere Fertigkeiten auf das Raster legen",
+            "edit-group-blur-background": "Hintergrund verwischen",
+            "edit-group-blur-background-hint": "Ob das Hintergrundbild unscharf werden soll",
+            "edit-group-color": "Farbe",
+            "edit-group-color-hint": "Die Farbe der Gruppe",
+            "edit-group-image": "Hintergrundbild",
+            "edit-group-image-hint": "Das Bild, das als Hintergrund für die Gruppe verwendet werden soll",
+            "edit-group-min-cols": "Mindestspalten",
+            "edit-group-min-cols-hint": "Die minimale Anzahl von Spalten im Raster",
+            "edit-group-min-rows": "Mindestanzahl an Zeilen",
+            "edit-group-min-rows-hint": "Die minimale Anzahl von Zeilen im Raster",
+            "edit-group-name": "Name",
+            "edit-group-name-hint": "Der Name der Gruppe",
+            "edit-group-sound": "Soundeffekt",
+            "edit-group-sound-hint": "Der Soundeffekt, der abgespielt wird, wenn eine Fertigkeit freigeschaltet wird",
+            "edit-group-submit": "Speichern",
+            "edit-group-title": "Gruppe bearbeiten:",
+            "edit-skill-condition-script": "Bedingungsskript",
+            "edit-skill-condition-script-hint": "Ein Skript, das überprüft wird, um festzustellen, ob diese Fertigkeit freigeschaltet werden kann. \nDas Skript muss einen booleschen Wert zurückgeben. \nSie können im Makro auf Akteur, Skill, Gruppe und SkillTree verweisen.",
+            "edit-skill-connected-skills": "Erforderliche Fähigkeiten",
+            "edit-skill-connected-skills-hint": "Erforderliche Fähigkeiten, um diese Fähigkeit freizuschalten. \nBefolgt die erforderliche Fähigkeitsregel.",
+            "edit-skill-image": "Bild",
+            "edit-skill-item": "Verknüpfte Artikel",
+            "edit-skill-item-hint": "Wenn eine Fertigkeit freigeschaltet wird, werden die damit verbundenen Elemente dem Akteur hinzugefügt. \nBeim Entfernen werden auch die Elemente entfernt. \nFür Fertigkeiten, die mehrere Punkte erfordern, werden Gegenstände basierend auf den ausgegebenen Punkten gewährt. \nBei einer 3-Punkte-Fähigkeit und 3 Gegenständen wird beispielsweise ein Gegenstand pro Punkt gewährt. \nWenn für 3 Punkte 5 Punkte erforderlich sind, wird für jeweils 2 Punkte ein Punkt vergeben, wobei der letzte Punkt für den fünften Punkt vergeben wird.",
+            "edit-skill-linked-skill-rule": "Erforderliche Überschreibung der Fähigkeitsregel",
+            "edit-skill-linked-skill-rule-hint": "Wenn eine Zahl größer als 0 eingestellt ist, wird die Regel für erforderliche Fertigkeiten außer Kraft gesetzt und es muss die angegebene Anzahl erforderlicher Fertigkeiten (oder mehr) freigeschaltet werden, damit diese Fertigkeit freigeschaltet werden kann",
+            "edit-skill-mutual-exclusion": "Gegenseitiger Ausschluss",
+            "edit-skill-mutual-exclusion-hint": "Bei einer Zahl größer als 1 kann nur die angegebene Anzahl an Fertigkeiten, die für dieselbe Fertigkeit wie diese erforderlich sind, gleichzeitig freigeschaltet werden",
+            "edit-skill-name": "Name",
+            "edit-skill-on-unlock": "Auf Skript ändern",
+            "edit-skill-on-unlock-hint": "Ein Skript, das ausgeführt wird, wenn diese Fertigkeit freigeschaltet oder ein Punkt ausgegeben wird. \nSie können im Makro auf Akteur, Skill, Gruppe und SkillTree verweisen.",
+            "edit-skill-points": "Punkte",
+            "edit-skill-points-hint": "Die Anzahl der Punkte, die zum Freischalten dieser Fertigkeit erforderlich sind.",
+            "edit-skill-title": "Fertigkeit bearbeiten:",
+            "linked-skill-rule": "Erforderliche Fähigkeitsregel",
+            "linked-skill-rule-all": "Alle",
+            "linked-skill-rule-hint": "Wie sich erforderliche Fertigkeiten verhalten sollten:<br> – Einige: Nur eine erforderliche Fertigkeit ist erforderlich, um eine Fertigkeit freizuschalten.<br> – Alle: Alle erforderlichen Fertigkeiten müssen freigeschaltet sein, damit eine Fertigkeit freigeschaltet werden kann",
+            "linked-skill-rule-some": "Manche",
+            "multiple-items-rule": "Regel für mehrere Artikel",
+            "multiple-items-rule-all": "Alle",
+            "multiple-items-rule-hint": "Wie sich mehrere Gegenstände in abgestuften Fertigkeiten verhalten sollten:<br> – Alle: Alle Gegenstände werden gewährt.<br> – Eins: Nur der Gegenstand, der der aktuellen Stufe entspricht, wird gewährt",
+            "multiple-items-rule-one": "Eins",
+            "new-group": "Neue Gruppe",
+            "skill-style": "Geschicklichkeitsstil",
+            "skill-style-circle": "Kreis",
+            "skill-style-hint": "Wie Fertigkeiten angezeigt werden sollen:<br> - Kreis: Fertigkeiten werden als Kreise angezeigt<br> - Quadrat: Fertigkeiten werden als Quadrate angezeigt",
+            "skill-style-square": "Quadrat",
+            "skill-tree-options": "Fertigkeitsbaum-Optionen",
+            "title": "Fertigkeitsbaum-Editor:"
+        },
+        "skill-tree-manager": {
+            "create-new": "Neu erstellen",
+            "delete": "Löschen",
+            "edit": "Bearbeiten",
+            "name": "Name",
+            "title": "Fähigkeitsbaum-Manager"
+        }
+    }
+}

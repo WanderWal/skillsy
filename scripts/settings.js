@@ -1,0 +1,84 @@
+import {SkillTreeActor} from "./app/SkillTreeActor.js";
+import {SkillTreeManager} from "./app/SkillTreeManager.js";
+import {MODULE_ID} from "./main.js";
+
+const SETTING_CACHE = {};
+const DEFAULT_CACHE = false;
+
+export function registerSettings() {
+    const settings = {
+        playerOwnedOnly: {
+            name: `${MODULE_ID}.settings.playerOwnedOnly.name`,
+            hint: `${MODULE_ID}.settings.playerOwnedOnly.hint`,
+            scope: "world",
+            config: true,
+            default: false,
+            type: Boolean,
+        },
+        playersCantEditPoints: {
+            name: `${MODULE_ID}.settings.playersCantEditPoints.name`,
+            hint: `${MODULE_ID}.settings.playersCantEditPoints.hint`,
+            scope: "world",
+            config: true,
+            default: false,
+            type: Boolean,
+        },
+        playersCantRemovePoints: {
+            name: `${MODULE_ID}.settings.playersCantRemovePoints.name`,
+            hint: `${MODULE_ID}.settings.playersCantRemovePoints.hint`,
+            scope: "world",
+            config: true,
+            default: false,
+            type: Boolean,
+        },
+        useFullscreen: {
+            name: `${MODULE_ID}.settings.useFullscreen.name`,
+            hint: `${MODULE_ID}.settings.useFullscreen.hint`,
+            scope: "client",
+            config: false,
+            default: false,
+            type: Boolean,
+            onChange: value => {
+                foundry.applications.instances.forEach(app => {
+                    if (app instanceof SkillTreeActor) app.toggleFullscreen(value);
+                });
+            }
+        },
+    };
+
+    registerSettingsArray(settings);
+
+    game.settings.registerMenu(MODULE_ID, "skill-tree-manager", {
+        name: `${MODULE_ID}.settings.skill-tree-manager.name`,
+        label: `${MODULE_ID}.settings.skill-tree-manager.label`,
+        hint: `${MODULE_ID}.settings.skill-tree-manager.hint`,
+        icon: "fas fa-code-branch",
+        type: SkillTreeManager,
+        restricted: true,
+    });
+}
+
+export function getSetting(key) {
+    return SETTING_CACHE[key] ?? game.settings.get(MODULE_ID, key);
+}
+
+export async function setSetting(key, value) {
+    return await game.settings.set(MODULE_ID, key, value);
+}
+
+function registerSettingsArray(settings) {
+    for (const [key, value] of Object.entries(settings)) {
+        if (!value.name) value.name = `${MODULE_ID}.settings.${key}.name`
+        if (!value.hint) value.hint = `${MODULE_ID}.settings.${key}.hint`
+        if (value.useCache === undefined) value.useCache = DEFAULT_CACHE;
+        if (value.useCache) {
+            const unwrappedOnChange = value.onChange;
+            if (value.onChange) value.onChange = (value) => {
+                SETTING_CACHE[key] = value;
+                if (unwrappedOnChange) unwrappedOnChange(value);
+            }
+        }
+        game.settings.register(MODULE_ID, key, value);
+        if(value.useCache) SETTING_CACHE[key] = getSetting(key);
+    }
+}
