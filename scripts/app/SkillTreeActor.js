@@ -1,4 +1,4 @@
-import { MODULE_ID } from "./consts.js";
+import { MODULE_ID } from "../consts.js";
 import { deepClone, getProperty, HandlebarsApplication, l, mergeClone, mergeObject } from "../lib/utils.js";
 import { FormBuilder } from "../lib/formBuilder.js";
 import { DEFAULT_SKILL_DATA, SKILL_LINE_WIDTH, SkillTreeApplication, reverseOperators } from "./SkillTreeApplication.js";

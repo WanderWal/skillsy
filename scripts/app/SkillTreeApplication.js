@@ -1,4 +1,4 @@
-import { MODULE_ID } from "./consts.js";
+import { MODULE_ID } from "../consts.js";
 import { deepClone, HandlebarsApplication, l, mergeObject } from "../lib/utils.js";
 import { FormBuilder } from "../lib/formBuilder.js";
 
