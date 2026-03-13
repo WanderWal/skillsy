@@ -1,6 +1,6 @@
 import {SkillTreeActor} from "./app/SkillTreeActor.js";
 import {SkillTreeManager} from "./app/SkillTreeManager.js";
-import {MODULE_ID} from "./main.js";
+import {MODULE_ID} from "./consts.js";
 
 const SETTING_CACHE = {};
 const DEFAULT_CACHE = false;
