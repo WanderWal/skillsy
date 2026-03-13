@@ -3,6 +3,8 @@
         <thead>
             <tr>
                 <th>{{localize "skill-tree.skill-tree-manager.name"}}</th>
+                <th></th>
+                <th></th>
                 <th>{{localize "skill-tree.skill-tree-manager.edit"}}</th>
                 <th>{{localize "skill-tree.skill-tree-manager.permissions"}}</th>
                 <th>{{localize "skill-tree.skill-tree-manager.delete"}}</th>
@@ -12,6 +14,10 @@
             {{#each skillTrees as |skillTree|}}
             <tr>
                 <td>{{skillTree.name}}</td>
+                <td><button type="button" name="move-up" data-uuid="{{skillTree.uuid}}" {{#unless skillTree.canMoveUp}}disabled{{/unless}}><i
+                            class="fas fa-arrow-up"></i></button></td>
+                <td><button type="button" name="move-down" data-uuid="{{skillTree.uuid}}" {{#unless skillTree.canMoveDown}}disabled{{/unless}}><i
+                            class="fas fa-arrow-down"></i></button></td>
                 <td><button type="button" name="edit" data-uuid="{{skillTree.uuid}}"><i
                             class="fas fa-edit"></i></button></td>
                 <td><button type="button" name="permissions" data-uuid="{{skillTree.uuid}}"><i

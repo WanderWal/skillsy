@@ -267,7 +267,7 @@ export class SkillTreeActor extends HandlebarsApplication {
         super._onRender(context, options);
         const html = this.element;
 
-        html.querySelectorAll("input, select").forEach((input) => {
+        html.querySelectorAll("input").forEach((input) => {
             input.addEventListener("change", async (event) => {
                 const value = event.target.value;
                 const name = event.target.name;
@@ -279,6 +279,42 @@ export class SkillTreeActor extends HandlebarsApplication {
                 this.render(true);
             });
         });
+
+        const selector = html.querySelector(".skill-tree-selector");
+        const menuToggle = html.querySelector("button[name='toggle-skill-tree-menu']");
+        const menu = html.querySelector(".skill-tree-menu");
+
+        const closeSkillTreeMenu = () => {
+            if (!menu || !menuToggle) return;
+            menu.classList.remove("open");
+            menuToggle.setAttribute("aria-expanded", "false");
+        };
+
+        if (menuToggle && menu) {
+            menuToggle.addEventListener("click", (event) => {
+                event.preventDefault();
+                event.stopPropagation();
+                const isOpen = menu.classList.toggle("open");
+                menuToggle.setAttribute("aria-expanded", isOpen ? "true" : "false");
+            });
+
+            html.querySelectorAll("button[name='select-skill-tree']").forEach((button) => {
+                button.addEventListener("click", async (event) => {
+                    event.preventDefault();
+                    const selectedUuid = event.currentTarget.dataset.value;
+                    if (!selectedUuid || selectedUuid === this.skillTree?.uuid) {
+                        closeSkillTreeMenu();
+                        return;
+                    }
+                    await this.actor.setFlag(MODULE_ID, "selectedSkillTree", selectedUuid);
+                    this.render(true);
+                });
+            });
+
+            html.addEventListener("click", (event) => {
+                if (!selector?.contains(event.target)) closeSkillTreeMenu();
+            });
+        }
 
         html.querySelectorAll(".skill-container").forEach((skillContainer) => {
             skillContainer.addEventListener("contextmenu", async (event) => {

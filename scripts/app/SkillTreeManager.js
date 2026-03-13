@@ -58,8 +58,35 @@ export class SkillTreeManager extends HandlebarsApplication {
     }
 
     async _prepareContext(options) {
-        const skillTrees = game.journal.filter(j => j.getFlag(MODULE_ID, "isSkillTree")).sort((a, b) => a.sort - b.sort);
+        const skillTrees = game.journal
+            .filter((j) => j.getFlag(MODULE_ID, "isSkillTree"))
+            .sort((a, b) => a.sort - b.sort)
+            .map((skillTree, index, all) => ({
+                ...skillTree,
+                canMoveUp: index > 0,
+                canMoveDown: index < all.length - 1,
+            }));
         return { skillTrees };
+    }
+
+    async moveSkillTree(uuid, direction) {
+        const sortedSkillTrees = game.journal
+            .filter((j) => j.getFlag(MODULE_ID, "isSkillTree"))
+            .sort((a, b) => a.sort - b.sort);
+
+        const currentIndex = sortedSkillTrees.findIndex((skillTree) => skillTree.uuid === uuid);
+        if (currentIndex < 0) return;
+
+        const targetIndex = currentIndex + direction;
+        if (targetIndex < 0 || targetIndex >= sortedSkillTrees.length) return;
+
+        const currentSkillTree = sortedSkillTrees[currentIndex];
+        const targetSkillTree = sortedSkillTrees[targetIndex];
+
+        await JournalEntry.implementation.updateDocuments([
+            { _id: currentSkillTree.id, sort: targetSkillTree.sort },
+            { _id: targetSkillTree.id, sort: currentSkillTree.sort },
+        ]);
     }
 
     _onRender(context, options) {
@@ -111,6 +138,24 @@ export class SkillTreeManager extends HandlebarsApplication {
                 const uuid = event.currentTarget.dataset.uuid;
                 const skillTree = await fromUuid(uuid);
                 await skillTree.deleteDialog();
+                this.render(true);
+            });
+        });
+
+        html.querySelectorAll("button[name='move-up']").forEach((button) => {
+            button.addEventListener("click", async (event) => {
+                event.preventDefault();
+                const uuid = event.currentTarget.dataset.uuid;
+                await this.moveSkillTree(uuid, -1);
+                this.render(true);
+            });
+        });
+
+        html.querySelectorAll("button[name='move-down']").forEach((button) => {
+            button.addEventListener("click", async (event) => {
+                event.preventDefault();
+                const uuid = event.currentTarget.dataset.uuid;
+                await this.moveSkillTree(uuid, 1);
                 this.render(true);
             });
         });

@@ -1,12 +1,19 @@
 <div class="standard-form">
 
     <nav>
-        <select name="selectedSkillTree">
-            {{#each skillTreesOptions as |skillTree|}}
-            <option value="{{skillTree.key}}" {{#if skillTree.selected}}selected{{/if}}>{{localize skillTree.label}}
-            </option>
-            {{/each}}
-        </select>
+        <div class="skill-tree-selector">
+            <button type="button" class="skill-tree-menu-toggle" name="toggle-skill-tree-menu" aria-expanded="false">
+                <h1>{{skillTreeName}}</h1>
+                <i class="fas fa-caret-down"></i>
+            </button>
+            <div class="skill-tree-menu" role="menu">
+                {{#each skillTreesOptions as |skillTree|}}
+                <button type="button" name="select-skill-tree" data-value="{{skillTree.key}}" class="{{#if skillTree.selected}}active{{/if}}">
+                    {{localize skillTree.label}}
+                </button>
+                {{/each}}
+            </div>
+        </div>
 
         <div class="input-wrapper">
         <input style="{{#unless canEditPoints}}pointer-events: none;{{/unless}}{{#if pointsImage}}background-image: url('{{pointsImage}}');{{/if}}" type="number" name="skillPoints" value="{{skillPoints}}" />

@@ -3,7 +3,7 @@
   margin-right: 0;
 }
 .skill-tree-manager table tr td:first-of-type {
-  width: 90%;
+  width: 75%;
 }
 .skill-tree-manager table button {
   width: auto;
@@ -290,17 +290,46 @@
   width: 100%;
   padding: 0.3rem;
 }
-.skill-tree-actor nav select {
+.skill-tree-actor nav .skill-tree-selector {
+  position: relative;
+}
+.skill-tree-actor nav .skill-tree-menu-toggle {
   width: min-content;
   height: min-content;
   font-size: var(--points-input-size);
   background: transparent;
-  font-family: var(--font-h1);
   text-align: center;
   border: none;
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
 }
-.skill-tree-actor nav select option {
+.skill-tree-actor nav .skill-tree-menu-toggle i {
+  margin: 0;
+}
+.skill-tree-actor nav .skill-tree-menu {
+  position: absolute;
+  top: calc(100% + 0.25rem);
+  left: 50%;
+  transform: translateX(-50%);
+  display: none;
+  flex-direction: column;
   background: var(--input-background-color);
+  border: 1px solid var(--color-cool-3);
+  border-radius: 5px;
+  padding: 0.25rem;
+  z-index: 10;
+  min-width: max-content;
+}
+.skill-tree-actor nav .skill-tree-menu.open {
+  display: flex;
+}
+.skill-tree-actor nav .skill-tree-menu button {
+  width: 100%;
+  text-align: left;
+}
+.skill-tree-actor nav .skill-tree-menu button.active {
+  pointer-events: none;
 }
 .skill-tree-actor nav .input-wrapper {
   min-width: var(--points-input-size);
