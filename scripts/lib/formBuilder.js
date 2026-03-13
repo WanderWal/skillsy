@@ -1,4 +1,4 @@
-import { MODULE_ID } from "../main.js";
+import { MODULE_ID } from "./consts.js";
 
 const PARTIAL_KEY = "6uy8g1tXqHlhlp65dhiL-genericFormHelper-" + MODULE_ID;
 

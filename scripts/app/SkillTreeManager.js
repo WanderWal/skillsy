@@ -1,4 +1,4 @@
-import { MODULE_ID } from "../main.js";
+import { MODULE_ID } from "./consts.js";
 import { HandlebarsApplication, l } from "../lib/utils.js";
 import {SkillTreeApplication} from "./SkillTreeApplication.js";
 import {FormBuilder} from "../lib/formBuilder.js";

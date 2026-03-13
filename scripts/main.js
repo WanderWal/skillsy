@@ -5,7 +5,7 @@ import { initConfig } from "./config.js";
 import { l } from "./lib/utils.js";
 import { getSetting, registerSettings } from "./settings.js";
 
-export const MODULE_ID = "skill-tree";
+import { MODULE_ID } from "./consts.js";
 
 Hooks.on("init", () => {
     initConfig();

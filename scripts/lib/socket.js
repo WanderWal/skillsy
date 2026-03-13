@@ -1,4 +1,4 @@
-import { MODULE_ID } from "../main.js";
+import { MODULE_ID } from "./consts.js";
 
 /**
  * Imports the Socket class from the specified module.
