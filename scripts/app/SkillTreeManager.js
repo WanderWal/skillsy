@@ -80,24 +80,28 @@ export class SkillTreeManager extends HandlebarsApplication {
         return null;
     }
 
-    async moveSkillTree(uuid, direction) {
+    async moveSkillTree(skillTreeId, direction) {
         const sortedSkillTrees = game.journal
             .filter((j) => j.getFlag(MODULE_ID, "isSkillTree"))
             .sort((a, b) => a.sort - b.sort);
 
-        const currentIndex = sortedSkillTrees.findIndex((skillTree) => skillTree.uuid === uuid);
+        const currentIndex = sortedSkillTrees.findIndex((skillTree) => skillTree.id === skillTreeId);
         if (currentIndex < 0) return;
 
         const targetIndex = currentIndex + direction;
         if (targetIndex < 0 || targetIndex >= sortedSkillTrees.length) return;
 
-        const currentSkillTree = sortedSkillTrees[currentIndex];
-        const targetSkillTree = sortedSkillTrees[targetIndex];
+        const reorderedSkillTrees = [...sortedSkillTrees];
+        const [movedSkillTree] = reorderedSkillTrees.splice(currentIndex, 1);
+        reorderedSkillTrees.splice(targetIndex, 0, movedSkillTree);
 
-        await JournalEntry.implementation.updateDocuments([
-            { _id: currentSkillTree.id, sort: targetSkillTree.sort },
-            { _id: targetSkillTree.id, sort: currentSkillTree.sort },
-        ]);
+        const sortDensity = CONST.SORT_INTEGER_DENSITY ?? 100000;
+        const updates = reorderedSkillTrees.map((skillTree, index) => ({
+            _id: skillTree.id,
+            sort: (index + 1) * sortDensity,
+        }));
+
+        await JournalEntry.implementation.updateDocuments(updates);
     }
 
     _onRender(context, options) {
@@ -168,8 +172,13 @@ export class SkillTreeManager extends HandlebarsApplication {
         html.querySelectorAll("button[name='move-up']").forEach((button) => {
             button.addEventListener("click", async (event) => {
                 event.preventDefault();
-                const uuid = event.currentTarget.dataset.uuid;
-                await this.moveSkillTree(uuid, -1);
+                const skillTree = await this.resolveSkillTreeFromDataset(event.currentTarget);
+                if (!skillTree) {
+                    ui.notifications.warn(l(`${MODULE_ID}.skill-tree-actor.no-skill-tree`));
+                    this.render(true);
+                    return;
+                }
+                await this.moveSkillTree(skillTree.id, -1);
                 this.render(true);
             });
         });
@@ -177,8 +186,13 @@ export class SkillTreeManager extends HandlebarsApplication {
         html.querySelectorAll("button[name='move-down']").forEach((button) => {
             button.addEventListener("click", async (event) => {
                 event.preventDefault();
-                const uuid = event.currentTarget.dataset.uuid;
-                await this.moveSkillTree(uuid, 1);
+                const skillTree = await this.resolveSkillTreeFromDataset(event.currentTarget);
+                if (!skillTree) {
+                    ui.notifications.warn(l(`${MODULE_ID}.skill-tree-actor.no-skill-tree`));
+                    this.render(true);
+                    return;
+                }
+                await this.moveSkillTree(skillTree.id, 1);
                 this.render(true);
             });
         });

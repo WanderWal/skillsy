@@ -32,6 +32,7 @@ export const DEFAULT_SKILL_DATA = {
     mutualExclusion: 0,
     allowIncompleteProgression: 0,
     minimumPointsInGroup: 0,
+    maximumPointsInGroup: 0,
     itemUuids: [],
     connectedSkills: [],
     conditionScript: "",
@@ -597,6 +598,7 @@ export class SkillTreeApplication extends HandlebarsApplication {
             .number({name: `flags.${MODULE_ID}.linkedSkillRule`, label: l(`${MODULE_ID}.${this.APP_ID}.edit-skill-linked-skill-rule`), hint: l(`${MODULE_ID}.${this.APP_ID}.edit-skill-linked-skill-rule-hint`)})
             .number({ name: `flags.${MODULE_ID}.mutualExclusion`, label: l(`${MODULE_ID}.${this.APP_ID}.edit-skill-mutual-exclusion`), hint: l(`${MODULE_ID}.${this.APP_ID}.edit-skill-mutual-exclusion-hint`) })
             .number({ name: `flags.${MODULE_ID}.minimumPointsInGroup`, label: l(`${MODULE_ID}.${this.APP_ID}.edit-skill-minimum-points-in-group`), hint: l(`${MODULE_ID}.${this.APP_ID}.edit-skill-minimum-points-in-group-hint`) })
+            .number({ name: `flags.${MODULE_ID}.maximumPointsInGroup`, label: l(`${MODULE_ID}.${this.APP_ID}.edit-skill-maximum-points-in-group`), hint: l(`${MODULE_ID}.${this.APP_ID}.edit-skill-maximum-points-in-group-hint`) })
             .uuid({ name: `flags.${MODULE_ID}.itemUuids`, label: l(`${MODULE_ID}.${this.APP_ID}.edit-skill-item`), hint: l(`${MODULE_ID}.${this.APP_ID}.edit-skill-item-hint`), type: "Item", multiple: true })
             .uuid({ name: `flags.${MODULE_ID}.connectedSkills`, label: l(`${MODULE_ID}.${this.APP_ID}.edit-skill-connected-skills`), hint: l(`${MODULE_ID}.${this.APP_ID}.edit-skill-connected-skills-hint`), type: "JournalEntryPage", multiple: true })
             .uuid({ name: `flags.${MODULE_ID}.lockoutSkills`, label: l(`${MODULE_ID}.${this.APP_ID}.edit-skill-lockout-skills`), hint: l(`${MODULE_ID}.${this.APP_ID}.edit-skill-lockout-skills-hint`), type: "JournalEntryPage", multiple: true })

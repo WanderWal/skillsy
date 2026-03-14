@@ -145,6 +145,8 @@
             "edit-skill-edit-tooltip-button": "Edit Tooltip",
             "edit-skill-minimum-points-in-group": "Minimum Points in Group",
             "edit-skill-minimum-points-in-group-hint": "The minimum number of points spent in the group required to unlock this skill.",
+            "edit-skill-maximum-points-in-group": "Maximum Points in Group",
+            "edit-skill-maximum-points-in-group-hint": "The maximum number of points that can be spent in the group to unlock this skill. Set to 0 to disable.",
             "skill-tree-options": "Skill Tree Options",
             "linked-skill-rule": "Required Skill Rule",
             "linked-skill-rule-hint": "How required skills should behave:\n\n - Some: Only one required skill is required to unlock a skill\n\n - All: All required skills must be unlocked in order for a skill to be unlocked",

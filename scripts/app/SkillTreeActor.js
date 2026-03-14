@@ -465,7 +465,9 @@ export class SkillTreeActor extends HandlebarsApplication {
                         const tierText = skill.tier ? ` (${skill.tier})` : "";
                         let requirements = (skill.getFlag(MODULE_ID, "requirements") ?? []).map((r, i) => `<span class="requirement ${skillHelper.isValidRequirement(i) ? "valid" : "invalid"}">${r.label} ${r.value}</span>`).join("<br>");
                         const requiresMorePointsInGroup = skillHelper.requiresMorePointsInGroup;
-                        if(requiresMorePointsInGroup) requirements += (`<span class="requirement">${skillHelper.group.name} ${requiresMorePointsInGroup}</span>`);
+                        const requiresLessPointsInGroup = skillHelper.requiresLessPointsInGroup;
+                        if (requiresMorePointsInGroup) requirements += (`<span class="requirement">${skillHelper.group.name} &ge; ${requiresMorePointsInGroup}</span>`);
+                        if (requiresLessPointsInGroup) requirements += (`<span class="requirement">${skillHelper.group.name} &le; ${requiresLessPointsInGroup}</span>`);
                         if (requirements.length) requirements = `<span>${l(`${MODULE_ID}.skill-tree-actor.prerequisites`)}</span><br>${requirements}`;
                         const tooltip = await foundry.applications.ux.TextEditor.implementation.enrichHTML(`<figure><img src='${skill.src}'><h1>${skill.name}${tierText}</h1></figure><div class="skill-requirements">${requirements}</div>${mutualExclusionText}${skill.text.content ?? ""}`);
                         children.push({ ...skill, row: i, col: j, uuid: skill.uuid, tooltip, skillHelper: this.skills.get(skill.uuid) });
@@ -682,8 +684,13 @@ class Skill {
     }
 
     get requiresMorePointsInGroup() {
-        const minimumPointsInGroup = this.skillData.minimumPointsInGroup || 0;
+        const minimumPointsInGroup = parseInt(this.skillData.minimumPointsInGroup || 0);
         return minimumPointsInGroup > 0 && this.pointsInGroup < minimumPointsInGroup ? minimumPointsInGroup : false;
+    }
+
+    get requiresLessPointsInGroup() {
+        const maximumPointsInGroup = parseInt(this.skillData.maximumPointsInGroup || 0);
+        return maximumPointsInGroup > 0 && this.pointsInGroup + this.purchaseCost > maximumPointsInGroup ? maximumPointsInGroup : false;
     }
 
     get canBeUnlocked() {
@@ -709,6 +716,12 @@ class Skill {
 
         const minimumPointsInGroup = this.skillData.minimumPointsInGroup || 0;
         if (minimumPointsInGroup > 0 && this.pointsInGroup < minimumPointsInGroup) {
+            this.#canBeUnlocked = false;
+            return;
+        }
+
+        const maximumPointsInGroup = parseInt(this.skillData.maximumPointsInGroup || 0);
+        if (maximumPointsInGroup > 0 && this.pointsInGroup + this.purchaseCost > maximumPointsInGroup) {
             this.#canBeUnlocked = false;
             return;
         }
