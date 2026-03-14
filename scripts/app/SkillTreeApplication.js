@@ -1,4 +1,4 @@
-import { MODULE_ID } from "../consts.js";
+import { MODULE_ID, POINT_BUILDS_SETTING_KEY } from "../consts.js";
 import { getPointBuildConfigs, getPlannedBuildSkillRows } from "../config.js";
 import { deepClone, HandlebarsApplication, l, mergeObject } from "../lib/utils.js";
 import { FormBuilder } from "../lib/formBuilder.js";
@@ -190,8 +190,19 @@ export class SkillTreeApplication extends HandlebarsApplication {
     async _prepareContext(options) {
         if (!this.skillTree) {
             ui.notifications.warn(l(`${MODULE_ID}.skill-tree-actor.no-skill-tree`));
-            return { groups: [], useCircleStyle: false };
+            return { groups: [], useCircleStyle: false, skillTreesOptions: [] };
         }
+
+        const skillTrees = game.journal
+            .filter((j) => j.getFlag(MODULE_ID, "isSkillTree"))
+            .sort((a, b) => a.sort - b.sort)
+            .filter((j) => j.testUserPermission(game.user, CONST.DOCUMENT_OWNERSHIP_LEVELS.OBSERVER));
+
+        const skillTreesOptions = skillTrees.map((skillTree) => ({
+            key: skillTree.uuid,
+            label: skillTree.name,
+            selected: skillTree.uuid === this.skillTree.uuid,
+        }));
 
         const groups = foundry.utils.deepClone(this.skillTree.getFlag(MODULE_ID, "groups") ?? []);
         //gridTemplate
@@ -233,7 +244,7 @@ export class SkillTreeApplication extends HandlebarsApplication {
 
         const skillStyle = this.skillTree.getFlag(MODULE_ID, "skillStyle") ?? Object.keys(SkillTreeApplication.SKILL_STYLE)[0];
 
-        return { groups, useCircleStyle: skillStyle === "circle" };
+        return { groups, useCircleStyle: skillStyle === "circle", skillTreesOptions };
     }
 
     _onRender(context, options) {
@@ -242,12 +253,25 @@ export class SkillTreeApplication extends HandlebarsApplication {
 
         html.querySelectorAll("input, select").forEach((input) => {
             input.addEventListener("change", async (event) => {
+                if (event.target.name === "active-skill-tree") return;
                 const value = event.target.value;
                 const name = event.target.name;
                 await this.skillTree.setFlag(MODULE_ID, name, value);
                 this.render(true);
             });
         });
+
+        const skillTreeSelector = html.querySelector("select[name='active-skill-tree']");
+        if (skillTreeSelector) {
+            skillTreeSelector.addEventListener("change", async (event) => {
+                const selectedUuid = event.currentTarget.value;
+                if (!selectedUuid || selectedUuid === this.skillTree?.uuid) return;
+                const selectedSkillTree = await fromUuid(selectedUuid);
+                if (!selectedSkillTree || selectedSkillTree.documentName !== "JournalEntry") return;
+                this.skillTree = selectedSkillTree;
+                this.render(true);
+            });
+        }
 
         html.querySelector("button[name='new-group']").addEventListener("click", async (event) => {
             event.preventDefault();
@@ -444,13 +468,194 @@ export class SkillTreeApplication extends HandlebarsApplication {
         }
     }
 
+    async remapSkillUuidReferences(oldUuid, newUuid, sourceTree, targetTree) {
+        if (!oldUuid || !newUuid || oldUuid === newUuid) return;
+
+        const skillTrees = game.journal.filter((journal) => journal.getFlag(MODULE_ID, "isSkillTree"));
+        for (const skillTree of skillTrees) {
+            const pageUpdates = [];
+            for (const page of skillTree.pages) {
+                const connectedSkills = page.getFlag(MODULE_ID, "connectedSkills") ?? [];
+                const lockoutSkills = page.getFlag(MODULE_ID, "lockoutSkills") ?? [];
+
+                let nextConnectedSkills = connectedSkills;
+                let nextLockoutSkills = lockoutSkills;
+
+                if (connectedSkills.includes(oldUuid)) {
+                    nextConnectedSkills = connectedSkills
+                        .map((uuid) => {
+                            if (uuid !== oldUuid) return uuid;
+                            if (skillTree.id === targetTree.id) return newUuid;
+                            return null;
+                        })
+                        .filter((uuid) => uuid && uuid !== page.uuid);
+                }
+
+                if (lockoutSkills.includes(oldUuid)) {
+                    nextLockoutSkills = lockoutSkills
+                        .map((uuid) => {
+                            if (uuid !== oldUuid) return uuid;
+                            if (skillTree.id === targetTree.id) return newUuid;
+                            return null;
+                        })
+                        .filter((uuid) => uuid && uuid !== page.uuid);
+                }
+
+                const connectedChanged = JSON.stringify(nextConnectedSkills) !== JSON.stringify(connectedSkills);
+                const lockoutChanged = JSON.stringify(nextLockoutSkills) !== JSON.stringify(lockoutSkills);
+                if (!connectedChanged && !lockoutChanged) continue;
+
+                const moduleFlags = foundry.utils.deepClone(page.flags?.[MODULE_ID] ?? {});
+                moduleFlags.connectedSkills = nextConnectedSkills;
+                moduleFlags.lockoutSkills = nextLockoutSkills;
+
+                pageUpdates.push({
+                    _id: page.id,
+                    flags: {
+                        [MODULE_ID]: moduleFlags,
+                    },
+                });
+            }
+
+            if (pageUpdates.length) {
+                await skillTree.updateEmbeddedDocuments("JournalEntryPage", pageUpdates);
+            }
+        }
+
+        const rawPointBuilds = game.settings.get(MODULE_ID, POINT_BUILDS_SETTING_KEY);
+        if (Array.isArray(rawPointBuilds)) {
+            let pointBuildsChanged = false;
+            const nextPointBuilds = rawPointBuilds.map((build) => {
+                const plannedSkills = Array.isArray(build?.plannedSkills) ? build.plannedSkills : [];
+                let buildChanged = false;
+
+                const nextPlannedSkills = plannedSkills.map((entry) => {
+                    if (typeof entry === "string") {
+                        if (entry !== oldUuid) return entry;
+                        buildChanged = true;
+                        return newUuid;
+                    }
+
+                    if (typeof entry?.uuid === "string" && entry.uuid === oldUuid) {
+                        buildChanged = true;
+                        return {
+                            ...entry,
+                            uuid: newUuid,
+                        };
+                    }
+
+                    return entry;
+                });
+
+                if (!buildChanged) return build;
+                pointBuildsChanged = true;
+                return {
+                    ...build,
+                    plannedSkills: nextPlannedSkills,
+                };
+            });
+
+            if (pointBuildsChanged) {
+                await game.settings.set(MODULE_ID, POINT_BUILDS_SETTING_KEY, nextPointBuilds);
+            }
+        }
+
+        const actorUpdates = [];
+        for (const actor of game.actors ?? []) {
+            const legacySkills = actor.getFlag(MODULE_ID, "skills");
+            const buildSkills = actor.getFlag(MODULE_ID, "buildSkills");
+
+            let legacyChanged = false;
+            let buildChanged = false;
+
+            const nextLegacySkills = Array.isArray(legacySkills)
+                ? legacySkills.map((skill) => {
+                      if (skill?.uuid !== oldUuid) return skill;
+                      legacyChanged = true;
+                      return {
+                          ...skill,
+                          uuid: newUuid,
+                      };
+                  })
+                : legacySkills;
+
+            const nextBuildSkills = buildSkills && typeof buildSkills === "object"
+                ? Object.fromEntries(
+                      Object.entries(buildSkills).map(([buildId, skills]) => {
+                          if (!Array.isArray(skills)) return [buildId, skills];
+                          const nextSkills = skills.map((skill) => {
+                              if (skill?.uuid !== oldUuid) return skill;
+                              buildChanged = true;
+                              return {
+                                  ...skill,
+                                  uuid: newUuid,
+                              };
+                          });
+                          return [buildId, nextSkills];
+                      }),
+                  )
+                : buildSkills;
+
+            if (!legacyChanged && !buildChanged) continue;
+
+            const updateData = { _id: actor.id, flags: { [MODULE_ID]: {} } };
+            if (legacyChanged) updateData.flags[MODULE_ID].skills = nextLegacySkills;
+            if (buildChanged) updateData.flags[MODULE_ID].buildSkills = nextBuildSkills;
+            actorUpdates.push(updateData);
+        }
+
+        if (actorUpdates.length) {
+            await Actor.implementation.updateDocuments(actorUpdates);
+        }
+    }
+
+    async moveSkillToCurrentTree(skill, target) {
+        const sourceTree = skill?.parent;
+        const targetTree = this.skillTree;
+        if (!skill || !sourceTree || !targetTree || sourceTree.id === targetTree.id) return null;
+
+        const sourceFlags = foundry.utils.deepClone(skill.flags ?? {});
+        const moduleFlags = foundry.utils.deepClone(sourceFlags[MODULE_ID] ?? {});
+        moduleFlags.row = target.row;
+        moduleFlags.col = target.col;
+        moduleFlags.groupId = target.groupId;
+        moduleFlags.connectedSkills = [];
+        moduleFlags.lockoutSkills = [];
+        sourceFlags[MODULE_ID] = moduleFlags;
+
+        const pageData = {
+            name: skill.name,
+            src: skill.src,
+            text: {
+                content: skill.text?.content ?? "",
+            },
+            flags: sourceFlags,
+        };
+
+        const [createdSkill] = await targetTree.createEmbeddedDocuments("JournalEntryPage", [pageData]);
+        if (!createdSkill) return null;
+
+        const oldUuid = skill.uuid;
+        const newUuid = createdSkill.uuid;
+
+        await this.remapSkillUuidReferences(oldUuid, newUuid, sourceTree, targetTree);
+        await skill.delete();
+
+        return createdSkill;
+    }
+
     async _onDrop(event) {
         let data;
-        const groupId = event.target.closest(".skill-group").dataset.groupId;
-        const row = parseInt(event.target.dataset.row);
-        const col = parseInt(event.target.dataset.col);
-        const isEmpty = event.target.closest(".skill-container").classList.contains("empty");
-        const dropTargetSkill = await fromUuid(event.target.closest(".skill-container").dataset.uuid);
+        const skillGroupElement = event.target.closest(".skill-group");
+        const skillContainerElement = event.target.closest(".skill-container");
+        if (!skillGroupElement || !skillContainerElement) return ui.notifications.error(l(`${MODULE_ID}.skill-tree-application.drop-error`));
+
+        const groupId = skillGroupElement.dataset.groupId;
+        const row = parseInt(skillContainerElement.dataset.row);
+        const col = parseInt(skillContainerElement.dataset.col);
+        const isEmpty = skillContainerElement.classList.contains("empty");
+        const dropTargetUuid = skillContainerElement.dataset.uuid;
+        const dropTargetSkill = dropTargetUuid ? await fromUuid(dropTargetUuid) : null;
         if (!Number.isFinite(row) || !Number.isFinite(col)) return ui.notifications.error(l(`${MODULE_ID}.skill-tree-application.drop-error`));
         if (!groupId) return ui.notifications.error(l(`${MODULE_ID}.skill-tree-application.drop-error`));
 
@@ -461,9 +666,11 @@ export class SkillTreeApplication extends HandlebarsApplication {
         }
         if (data.type === "JournalEntryPage") {
             const skill = await fromUuid(data.uuid);
-            if (skill.parent !== this.skillTree) return ui.notifications.error(l(`${MODULE_ID}.skill-tree-application.drop-error`));
+            if (!skill) return ui.notifications.error(l(`${MODULE_ID}.skill-tree-application.drop-error`));
+            const sameTree = skill.parent === this.skillTree;
 
             if (!isEmpty) {
+                if (!sameTree || !dropTargetSkill) return ui.notifications.error(l(`${MODULE_ID}.skill-tree-application.drop-error`));
                 const skillConnectedSkills = skill.getFlag(MODULE_ID, "connectedSkills") ?? [];
                 if (skillConnectedSkills.includes(dropTargetSkill.uuid)) {
                     await skill.setFlag(
@@ -474,6 +681,12 @@ export class SkillTreeApplication extends HandlebarsApplication {
                 } else {
                     await skill.setFlag(MODULE_ID, "connectedSkills", [...skillConnectedSkills, dropTargetSkill.uuid]);
                 }
+                this.render(true);
+                return;
+            }
+
+            if (!sameTree) {
+                await this.moveSkillToCurrentTree(skill, { row, col, groupId });
                 this.render(true);
                 return;
             }

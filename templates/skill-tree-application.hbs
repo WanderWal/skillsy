@@ -42,6 +42,9 @@
 
 
     <footer class="form-footer">
+        <select name="active-skill-tree">
+            {{selectOptions skillTreesOptions nameAttr="key" labelAttr="label" selectedAttr="selected"}}
+        </select>
         <button type="button" name="new-group"><i class="fas fa-plus"></i> {{localize
             "skill-tree.skill-tree-application.new-group"}}</button>
         <button type="button" name="configure-skill-tree"><i class="fas fa-cog"></i> {{localize "skill-tree.skill-tree-application.configure-skill-tree"}}</button>

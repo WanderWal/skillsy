@@ -134,6 +134,10 @@
   max-width: 80vw;
   max-height: 95vh;
 }
+.skill-tree-application .form-footer select[name='active-skill-tree'] {
+  min-width: 12rem;
+  width: 12rem;
+}
 .skill-tree-application div[data-application-part=content],
 .skill-tree-actor div[data-application-part=content] {
   align-items: center;
@@ -413,9 +417,11 @@
   width: min-content;
   height: min-content;
   font-size: var(--points-input-size);
-  background: transparent;
+  background: var(--input-background-color);
+  border: 1px solid var(--color-cool-3);
+  border-radius: 5px;
+  padding: 0.1rem 0.35rem;
   text-align: center;
-  border: none;
   display: flex;
   align-items: center;
   gap: 0.3rem;
@@ -443,9 +449,33 @@
 .skill-tree-actor nav .skill-tree-menu button {
   width: 100%;
   text-align: left;
+  background: var(--input-background-color);
+  border: 1px solid transparent;
+  border-radius: 4px;
 }
 .skill-tree-actor nav .skill-tree-menu button.active {
   pointer-events: none;
+  background: var(--color-cool-5-50);
+  border-color: var(--color-cool-3);
+}
+.skill-tree-actor nav .skill-tree-menu button:hover,
+.skill-tree-actor nav .skill-tree-menu button:focus-visible {
+  background: var(--color-cool-5-50);
+  border-color: var(--color-cool-3);
+}
+.point-build-skill-picker nav .skill-tree-menu button {
+  background: var(--input-background-color);
+  border: 1px solid transparent;
+  border-radius: 4px;
+}
+.point-build-skill-picker nav .skill-tree-menu button.active {
+  background: var(--color-cool-5-50);
+  border-color: var(--color-cool-3);
+}
+.point-build-skill-picker nav .skill-tree-menu button:hover,
+.point-build-skill-picker nav .skill-tree-menu button:focus-visible {
+  background: var(--color-cool-5-50);
+  border-color: var(--color-cool-3);
 }
 .skill-tree-actor nav .input-wrapper {
   min-width: var(--points-input-size);
@@ -531,6 +561,12 @@
 .point-build-skill-picker nav {
   justify-content: space-between;
   gap: 1rem;
+}
+.point-build-skill-picker nav .skill-tree-menu-toggle {
+  background: var(--input-background-color);
+  border: 1px solid var(--color-cool-3);
+  border-radius: 5px;
+  padding: 0.1rem 0.35rem;
 }
 .point-build-skill-picker .skill-groups {
   width: 100%;
