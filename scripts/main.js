@@ -16,9 +16,9 @@ Hooks.on("ready", () => {
     const module = game.modules.get(MODULE_ID);
     const API = {
         grantSkillPoints: async (actor, points, options = {}) => {
-            const current = getSkillPoints(actor, options.skillTree);
+            const current = getSkillPoints(actor, options.skillTree, { buildId: options.buildId });
             const newPoints = current + points;
-            await setSkillPoints(actor, options.skillTree, newPoints);
+            await setSkillPoints(actor, options.skillTree, newPoints, { buildId: options.buildId });
             return newPoints;
         },
         getSkillTreePoints,

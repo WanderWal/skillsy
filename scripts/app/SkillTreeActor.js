@@ -1,4 +1,5 @@
 import { MODULE_ID } from "../consts.js";
+import { getDerivedSkillPointMap, getPointBuildConfigs } from "../config.js";
 import { deepClone, getProperty, HandlebarsApplication, l, mergeClone, mergeObject } from "../lib/utils.js";
 import { FormBuilder } from "../lib/formBuilder.js";
 import { DEFAULT_SKILL_DATA, SKILL_LINE_WIDTH, SkillTreeApplication, reverseOperators } from "./SkillTreeApplication.js";
@@ -11,6 +12,74 @@ function normalizeStringList(values) {
     return list
         .map((value) => (typeof value === "string" ? value.trim().toLowerCase() : ""))
         .filter((value) => value.length > 0);
+}
+
+function normalizeUuidList(values) {
+    const list = Array.isArray(values) ? values : [];
+    return list
+        .filter((value) => typeof value === "string" && value.length > 0)
+        .filter((value, index, all) => all.indexOf(value) === index);
+}
+
+function normalizePlannedSkillEntries(values) {
+    const entries = Array.isArray(values) ? values : [];
+    const normalized = [];
+    for (const entry of entries) {
+        if (typeof entry === "string" && entry.length > 0) {
+            normalized.push({ uuid: entry });
+            continue;
+        }
+        const uuid = typeof entry?.uuid === "string" ? entry.uuid : "";
+        if (!uuid) continue;
+        const costValue = Number(entry?.cost);
+        const cost = Number.isFinite(costValue) && parseInt(costValue) > 0 ? parseInt(costValue) : undefined;
+        normalized.push(cost ? { uuid, cost } : { uuid });
+    }
+    return normalized.filter((entry, index, all) => all.findIndex((candidate) => candidate.uuid === entry.uuid) === index);
+}
+
+function getPlannedBuildSkillRows(build) {
+    const plannedSkills = normalizePlannedSkillEntries(build?.plannedSkills);
+    const count = plannedSkills.length;
+    if (!count) return [];
+
+    const maxPoints = Math.max(0, parseInt(build?.maxPoints ?? 0));
+    const rows = plannedSkills.map((entry) => ({ uuid: entry.uuid, maxCost: 1 }));
+
+    if (maxPoints <= count) return rows;
+
+    let remainingBudget = maxPoints - count;
+    const autoIndices = [];
+
+    for (const [index, entry] of plannedSkills.entries()) {
+        const desiredCost = Number.isFinite(Number(entry.cost)) ? Math.max(1, parseInt(entry.cost)) : null;
+        if (!desiredCost) {
+            autoIndices.push(index);
+            continue;
+        }
+
+        const desiredExtra = Math.max(0, desiredCost - 1);
+        const appliedExtra = Math.min(desiredExtra, remainingBudget);
+        rows[index].maxCost += appliedExtra;
+        remainingBudget -= appliedExtra;
+    }
+
+    const distributeIndices = autoIndices.length ? autoIndices : rows.map((_, index) => index);
+    const baseExtra = Math.floor(remainingBudget / distributeIndices.length);
+    const remainder = remainingBudget % distributeIndices.length;
+
+    for (const [index, rowIndex] of distributeIndices.entries()) {
+        rows[rowIndex].maxCost += baseExtra + (index < remainder ? 1 : 0);
+    }
+
+    return rows;
+}
+
+function getConfiguredSkillPointValue(skillUuid, fallback = 1) {
+    const page = typeof skillUuid === "string" ? fromUuidSync(skillUuid) : null;
+    const configured = Number.isFinite(Number(page?.getFlag(MODULE_ID, "points"))) ? parseInt(page.getFlag(MODULE_ID, "points")) : null;
+    if (configured !== null) return Math.max(1, configured);
+    return Math.max(1, parseInt(fallback ?? 1));
 }
 
 export function getActorClassIdentifiers(actor) {
@@ -49,22 +118,176 @@ export function skillTreeMatchesActorRequirements(skillTree, actor) {
     return requiredClasses.some((requiredClass) => actorClasses.has(requiredClass));
 }
 
-export function getSkillPoints(actor, skillTree) {
+function hasPointBuilds() {
+    return game.settings.settings.has(`${MODULE_ID}.pointBuilds`);
+}
+
+function getActiveBuildId(actor, fallbackBuilds = []) {
+    const builds = fallbackBuilds.length ? fallbackBuilds : getPointBuildConfigs();
+    const actorBuildId = actor.getFlag(MODULE_ID, "activeBuildId");
+    if (builds.some((build) => build.id === actorBuildId)) return actorBuildId;
+    return builds[0]?.id;
+}
+
+function getBuild(actor, buildId) {
+    const builds = getPointBuildConfigs();
+    const activeBuildId = buildId ?? getActiveBuildId(actor, builds);
+    return builds.find((build) => build.id === activeBuildId) ?? builds[0];
+}
+
+function getActorBuildPointAdjustment(actor, buildId) {
+    return parseInt(actor.getFlag(MODULE_ID, `buildPointAdjustments.${buildId}`) ?? 0);
+}
+
+export function getActorBuildSkills(actor, buildId) {
+    const skills = actor.getFlag(MODULE_ID, `buildSkills.${buildId}`) ?? [];
+    return Array.isArray(skills) ? foundry.utils.deepClone(skills) : [];
+}
+
+function getBuildSkillSpentValue(skill) {
+    if (!skill) return 0;
+    const configuredCost = getConfiguredSkillPointValue(skill.uuid, skill?.maxCost ?? skill?.points ?? 1);
+    const spentPoints = parseInt(skill?.points ?? 0);
+    if (configuredCost !== null) return spentPoints > 0 ? configuredCost : 0;
+    return Math.max(0, spentPoints);
+}
+
+export function getBuildSpentPoints(actor, buildId) {
+    return getActorBuildSkills(actor, buildId).reduce((sum, skill) => sum + getBuildSkillSpentValue(skill), 0);
+}
+
+export function getBuildMaxPoints(actor, buildId) {
+    const build = getBuild(actor, buildId);
+    if (!build) return 0;
+    return Math.max(0, parseInt(build.maxPoints ?? 0) + getActorBuildPointAdjustment(actor, build.id));
+}
+
+export function getSkillPoints(actor, skillTree, options = {}) {
+    if (hasPointBuilds()) {
+        const build = getBuild(actor, options.buildId);
+        if (!build) return 0;
+        const spent = getBuildSpentPoints(actor, build.id);
+        return getBuildMaxPoints(actor, build.id) - spent;
+    }
+
     const independent = skillTree?.getFlag(MODULE_ID, "independentSkillPoints");
     if (independent) return actor.getFlag(MODULE_ID, `skillTreeSkillPoints.${skillTree.id}`) ?? 0;
     return actor.getFlag(MODULE_ID, "skillPoints") ?? 0;
 }
 
-export function setSkillPoints(actor, skillTree, value) {
+export async function setSkillPoints(actor, skillTree, value, options = {}) {
     value = parseInt(value);
+
+    if (hasPointBuilds()) {
+        const build = getBuild(actor, options.buildId);
+        if (!build) return;
+        const spent = getBuildSpentPoints(actor, build.id);
+        const adjustment = value + spent - parseInt(build.maxPoints ?? 0);
+        return actor.setFlag(MODULE_ID, `buildPointAdjustments.${build.id}`, adjustment);
+    }
+
     const independent = skillTree?.getFlag(MODULE_ID, "independentSkillPoints");
     if (independent) return actor.setFlag(MODULE_ID, `skillTreeSkillPoints.${skillTree.id}`, value);
     else return actor.setFlag(MODULE_ID, "skillPoints", parseInt(value));
 }
 
-export function getSkillTreePoints(actor, skillTree) {
-    const points = getSkillPoints(actor, skillTree);
-    const actorSkills = actor.getFlag(MODULE_ID, "skills") ?? [];
+export async function ensureActorBuildState(actor) {
+    if (!hasPointBuilds()) return;
+
+    const builds = getPointBuildConfigs();
+    const derivedPoints = getDerivedSkillPointMap(builds);
+    if (!builds.length) return;
+
+    const expectedBuildIds = new Set(builds.map((build) => build.id));
+    let activeBuildId = getActiveBuildId(actor, builds);
+    let buildSkills = actor.getFlag(MODULE_ID, "buildSkills");
+    if (!buildSkills || typeof buildSkills !== "object") buildSkills = {};
+
+    let changed = false;
+    if (!activeBuildId) {
+        activeBuildId = builds[0].id;
+        changed = true;
+    }
+
+    for (const build of builds) {
+        const currentBuildSkills = Array.isArray(buildSkills[build.id]) ? buildSkills[build.id] : [];
+        const plannedRows = getPlannedBuildSkillRows(build);
+        if (plannedRows.length) {
+            const currentByUuid = new Map(currentBuildSkills.map((skill) => [skill.uuid, skill]));
+            const plannedUuids = new Set(plannedRows.map((skill) => skill.uuid));
+            const syncedRows = plannedRows.map((plannedSkill) => {
+                const existingPoints = parseInt(currentByUuid.get(plannedSkill.uuid)?.points ?? 0);
+                const derivedPointValue = derivedPoints.get(plannedSkill.uuid) ?? getConfiguredSkillPointValue(plannedSkill.uuid, plannedSkill.maxCost);
+                const points = Math.max(0, Math.min(existingPoints, derivedPointValue));
+                return {
+                    uuid: plannedSkill.uuid,
+                    points,
+                    maxCost: derivedPointValue,
+                };
+            });
+
+            const extraRows = currentBuildSkills
+                .filter((skill) => !plannedUuids.has(skill.uuid))
+                .map((skill) => {
+                    const maxCost = getConfiguredSkillPointValue(skill.uuid, skill?.maxCost ?? skill?.points ?? 1);
+                    const points = Math.max(0, Math.min(parseInt(skill?.points ?? 0), maxCost));
+                    return {
+                        uuid: skill.uuid,
+                        points,
+                        maxCost,
+                    };
+                });
+
+            const nextRows = [...syncedRows, ...extraRows];
+
+            const oldSerialized = JSON.stringify(currentBuildSkills);
+            const newSerialized = JSON.stringify(nextRows);
+            if (oldSerialized !== newSerialized) {
+                buildSkills[build.id] = nextRows;
+                changed = true;
+            }
+        } else if (!Array.isArray(buildSkills[build.id])) {
+            buildSkills[build.id] = [];
+            changed = true;
+        }
+    }
+
+    const legacySkills = actor.getFlag(MODULE_ID, "skills") ?? [];
+    const hasAnyBuildSkills = Object.values(buildSkills).some((skills) => Array.isArray(skills) && skills.length);
+    if (!hasAnyBuildSkills && Array.isArray(legacySkills) && legacySkills.length) {
+        buildSkills[activeBuildId] = legacySkills.map((skill) => ({
+            uuid: skill.uuid,
+            points: parseInt(skill.points ?? 0),
+            maxCost: Math.max(1, parseInt(skill.maxCost ?? 1)),
+        }));
+        changed = true;
+    }
+
+    const currentAdjustments = actor.getFlag(MODULE_ID, "buildPointAdjustments") ?? {};
+    const validAdjustments = {};
+    for (const [buildId, value] of Object.entries(currentAdjustments)) {
+        if (!expectedBuildIds.has(buildId)) continue;
+        validAdjustments[buildId] = parseInt(value ?? 0);
+    }
+
+    if (Object.keys(currentAdjustments).length !== Object.keys(validAdjustments).length) changed = true;
+
+    if (changed) {
+        await actor.update({
+            flags: {
+                [MODULE_ID]: {
+                    activeBuildId,
+                    buildSkills,
+                    buildPointAdjustments: validAdjustments,
+                },
+            },
+        });
+    }
+}
+
+export function getSkillTreePoints(actor, skillTree, options = {}) {
+    const build = hasPointBuilds() ? getBuild(actor, options.buildId) : null;
+    const actorSkills = build ? getActorBuildSkills(actor, build.id) : (actor.getFlag(MODULE_ID, "skills") ?? []);
     const groups = skillTree.getFlag(MODULE_ID, "groups") ?? [];
     const totalPoints = {
 
@@ -76,10 +299,12 @@ export function getSkillTreePoints(actor, skillTree) {
     const pages = Array.from(skillTree.pages);
     pages.forEach((page) => {
         const groupId = page.flags[MODULE_ID]?.groupId;
-        if (totalPoints[groupId] !== undefined) totalPoints[groupId] += actorSkills.find((s) => s.uuid === page.uuid)?.points ?? 0;
+        if (totalPoints[groupId] === undefined) return;
+        const actorSkill = actorSkills.find((s) => s.uuid === page.uuid);
+        totalPoints[groupId] += build ? getBuildSkillSpentValue(actorSkill) : parseInt(actorSkill?.points ?? 0);
     });
 
-    const totalSkillTreePoints = Object.values(totalPoints).reduce((a, b) => a + b, 0) + points;
+    const totalSkillTreePoints = Object.values(totalPoints).reduce((a, b) => a + b, 0);
 
     return {...totalPoints, total: totalSkillTreePoints};
 
@@ -180,6 +405,8 @@ export class SkillTreeActor extends HandlebarsApplication {
     }
 
     async _prepareContext(options) {
+        await ensureActorBuildState(this.actor);
+
         const skillTrees = game.journal
             .filter((j) => j.getFlag(MODULE_ID, "isSkillTree"))
             .sort((a, b) => a.sort - b.sort)
@@ -192,6 +419,9 @@ export class SkillTreeActor extends HandlebarsApplication {
 
         if (!this.skillTree) return {};
 
+        const pointBuilds = getPointBuildConfigs();
+        this.activeBuildId = getActiveBuildId(this.actor, pointBuilds);
+
         const groups = foundry.utils.deepClone(this.skillTree.getFlag(MODULE_ID, "groups") ?? []);
         //gridTemplate
         const pages = Array.from(this.skillTree.pages);
@@ -199,14 +429,14 @@ export class SkillTreeActor extends HandlebarsApplication {
         this.skills = new Map();
         const promises = [];
         pages.forEach((page) => {
-            const skill = new Skill(page, this.actor, this.skills);
+            const skill = new Skill(page, this.actor, this.skills, this.activeBuildId);
             this.skills.set(page.uuid, skill);
             promises.push(skill.computeCanBeUnlocked());
         });
 
         await Promise.all(promises);
 
-        const totalPoints = getSkillTreePoints(this.actor, this.skillTree);
+        const totalPoints = getSkillTreePoints(this.actor, this.skillTree, { buildId: this.activeBuildId });
 
         const showSkillPointsInGroup = this.skillTree.getFlag(MODULE_ID, "showSkillPointsInGroup") ?? false;
 
@@ -252,33 +482,26 @@ export class SkillTreeActor extends HandlebarsApplication {
 
         const skillTreesOptions = skillTrees.map((skillTree) => ({ key: skillTree.uuid, label: skillTree.name, selected: skillTree.uuid === this.skillTree.uuid }));
 
-        const skillPoints = getSkillPoints(this.actor, this.skillTree);
+        const skillPoints = getSkillPoints(this.actor, this.skillTree, { buildId: this.activeBuildId });
 
         const skillStyle = this.skillTree.getFlag(MODULE_ID, "skillStyle") ?? Object.keys(SkillTreeApplication.SKILL_STYLE)[0];
 
-        const canEditPoints = game.user.isGM || !getSetting("playersCantEditPoints");
-
         const pointsImage = this.skillTree.getFlag(MODULE_ID, "pointsImage");
 
-        return { groups, skillTreesOptions, skillPoints, skillTreeName: this.skillTree.name, useCircleStyle: skillStyle === "circle", canEditPoints, pointsImage, skillTreePoints: totalPoints.total };
+        return {
+            groups,
+            skillTreesOptions,
+            skillPoints,
+            skillTreeName: this.skillTree.name,
+            useCircleStyle: skillStyle === "circle",
+            pointsImage,
+            skillTreePoints: totalPoints.total,
+        };
     }
 
     _onRender(context, options) {
         super._onRender(context, options);
         const html = this.element;
-
-        html.querySelectorAll("input").forEach((input) => {
-            input.addEventListener("change", async (event) => {
-                const value = event.target.value;
-                const name = event.target.name;
-                if (name === "skillPoints") {
-                    await setSkillPoints(this.actor, this.skillTree, value);
-                } else {
-                    await this.actor.setFlag(MODULE_ID, name, value);
-                }
-                this.render(true);
-            });
-        });
 
         const selector = html.querySelector(".skill-tree-selector");
         const menuToggle = html.querySelector("button[name='toggle-skill-tree-menu']");
@@ -409,12 +632,13 @@ export class SkillTreeActor extends HandlebarsApplication {
 }
 
 class Skill {
-    constructor(skill, actor, allSkills) {
+    constructor(skill, actor, allSkills, buildId) {
         this.allSkills = allSkills;
         this.skill = skill;
         this.skillTree = skill.parent;
         this.actor = actor;
-        this.actorSkills = this.actor.getFlag(MODULE_ID, "skills") ?? [];
+        this.buildId = buildId;
+        this.actorSkills = getActorBuildSkills(this.actor, this.buildId);
         if (!Array.isArray(this.actorSkills)) this.actorSkills = [];
         this.skillData = mergeClone(DEFAULT_SKILL_DATA, this.skill.flags[MODULE_ID]);
         if (!this.skillData.points || this.skillData.points < 1) this.skillData.points = 1;
@@ -427,8 +651,32 @@ class Skill {
 
     #canBeUnlocked = null;
 
+    get buildSkillEntry() {
+        return this.actorSkills.find((s) => s.uuid === this.skill.uuid);
+    }
+
+    get purchaseCost() {
+        return getConfiguredSkillPointValue(this.skill.uuid, this.buildSkillEntry?.maxCost ?? 1);
+    }
+
+    get usesBuildCost() {
+        return !!this.buildSkillEntry;
+    }
+
+    get nodeBadgeText() {
+        return `${this.points.max}`;
+    }
+
+    get nodeBadgeTitle() {
+        return `${l(`${MODULE_ID}.skill-tree-actor.cost`)} ${this.points.max}`;
+    }
+
+    get showNodeBadge() {
+        return true;
+    }
+
     get pointsInGroup() {
-        const skillTreePoints = getSkillTreePoints(this.actor, this.skillTree);
+        const skillTreePoints = getSkillTreePoints(this.actor, this.skillTree, { buildId: this.buildId });
         const pointsInGroup = skillTreePoints[this.group?.id] ?? 0;
         return pointsInGroup;
     }
@@ -584,13 +832,14 @@ class Skill {
     }
 
     get points() {
-        const value = parseInt(this.actorSkills.find((s) => s.uuid === this.skill.uuid)?.points ?? 0);
-        const max = parseInt(this.skill.getFlag(MODULE_ID, "points") ?? 1);
+        const value = parseInt(this.buildSkillEntry?.points ?? 0);
+        const maxBySkill = getConfiguredSkillPointValue(this.skill.uuid, this.skill.getFlag(MODULE_ID, "points") ?? 1);
+        const max = Math.max(1, maxBySkill);
         return { value, max };
     }
 
     get showPointsCount() {
-        return this.points.max > 1;
+        return !this.usesBuildCost && this.points.max > 1;
     }
 
     get tier() {
@@ -611,11 +860,15 @@ class Skill {
 
     async modifyPoints(modifyValue) {
         if (!game.user.isGM && getSetting("playersCantRemovePoints") && modifyValue < 0) return false;
+        if (hasPointBuilds()) {
+            return this.modifyBuildPurchase(modifyValue);
+        }
+
         const wasUnlocked = this.isUnlocked;
         const { value, max } = this.points;
-        const currentSkill = this.actorSkills.find((s) => s.uuid === this.skill.uuid) ?? { uuid: this.skill.uuid, points: 0 };
+        const currentSkill = this.buildSkillEntry ?? { uuid: this.skill.uuid, points: 0, maxCost: max };
         const newPoints = value + modifyValue;
-        const newActorPoints = parseInt(getSkillPoints(this.actor, this.skillTree)) - modifyValue;
+        const newActorPoints = parseInt(getSkillPoints(this.actor, this.skillTree, { buildId: this.buildId })) - modifyValue;
         if (newActorPoints < 0) return false;
         if (newPoints > max) return false;
         if (newPoints < 0) return false;
@@ -632,8 +885,44 @@ class Skill {
         currentSkill.points = newPoints;
         this.actorSkills = this.actorSkills.filter((s) => s.uuid !== this.skill.uuid);
         this.actorSkills.push(currentSkill);
-        await this.actor.setFlag(MODULE_ID, "skills", this.actorSkills);
-        await setSkillPoints(this.actor, this.skillTree, newActorPoints);
+        await this.actor.setFlag(MODULE_ID, `buildSkills.${this.buildId}`, this.actorSkills);
+        if (!wasUnlocked && this.isUnlocked) this.playSound();
+        await this.updateItems({soundPlayed: !wasUnlocked && this.isUnlocked});
+        await this.executeUnlockScript();
+        return true;
+    }
+
+    async modifyBuildPurchase(modifyValue) {
+        const wasUnlocked = this.isUnlocked;
+        const { value, max } = this.points;
+        const purchaseCost = this.purchaseCost;
+        const currentSkill = this.buildSkillEntry ?? { uuid: this.skill.uuid, points: 0, maxCost: purchaseCost };
+
+        if (modifyValue > 0) {
+            if (value > 0) return false;
+            const remainingPoints = parseInt(getSkillPoints(this.actor, this.skillTree, { buildId: this.buildId }));
+            if (remainingPoints < purchaseCost) return false;
+            currentSkill.points = max;
+        } else if (modifyValue < 0) {
+            if (value <= 0) return false;
+            const newPoints = 0;
+            const skipRemovalCheck = false;
+            if (!skipRemovalCheck) {
+                const allowIncompleteProgression = this.skillData.allowIncompleteProgression || 0;
+                const allowRemovalDueToIncompleteProgression = allowIncompleteProgression && newPoints >= allowIncompleteProgression;
+                const skillsThatRequireThisSkill = Array.from(this.allSkills)
+                    .map((s) => s[1])
+                    .filter((s) => s.skillData.connectedSkills.includes(this.skill.uuid));
+                if (!allowRemovalDueToIncompleteProgression && skillsThatRequireThisSkill.length > 0 && skillsThatRequireThisSkill.some((s) => s.isUnlocked)) return false;
+            }
+            currentSkill.points = 0;
+        } else {
+            return false;
+        }
+
+        this.actorSkills = this.actorSkills.filter((s) => s.uuid !== this.skill.uuid);
+        this.actorSkills.push(currentSkill);
+        await this.actor.setFlag(MODULE_ID, `buildSkills.${this.buildId}`, this.actorSkills);
         if (!wasUnlocked && this.isUnlocked) this.playSound();
         await this.updateItems({soundPlayed: !wasUnlocked && this.isUnlocked});
         await this.executeUnlockScript();
@@ -656,7 +945,7 @@ class Skill {
 
     async updateItems({soundPlayed = false} = {}) {
         const { max } = this.points;
-        const current = (this.actor.getFlag(MODULE_ID, "skills") ?? []).find((s) => s.uuid === this.skill.uuid)?.points ?? 0;
+        const current = (this.actorSkills ?? []).find((s) => s.uuid === this.skill.uuid)?.points ?? 0;
         const items = await this.getItems();
         const tier = this.tier;
         const itemsToRemove = [];

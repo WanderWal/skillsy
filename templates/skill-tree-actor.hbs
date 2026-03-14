@@ -16,7 +16,7 @@
         </div>
 
         <div class="input-wrapper">
-        <input style="{{#unless canEditPoints}}pointer-events: none;{{/unless}}{{#if pointsImage}}background-image: url('{{pointsImage}}');{{/if}}" type="number" name="skillPoints" value="{{skillPoints}}" />
+        <input style="pointer-events: none;{{#if pointsImage}}background-image: url('{{pointsImage}}');{{/if}}" type="number" name="skillPoints" value="{{skillPoints}}" readonly />
         <span>{{skillTreePoints}}</span>
         </div>
     </nav>
@@ -49,8 +49,8 @@
                     style="{{#if skill.skillHelper.skillData.color}}--group-color: {{skill.skillHelper.skillData.color}}; {{/if}}"
                     >
                     <img src="{{skill.src}}" alt="{{skill.name}}" title="{{skill.name}}" />
-                    {{#if skill.skillHelper.showPointsCount}}
-                    <span>{{skill.skillHelper.points.value}}/{{skill.skillHelper.points.max}}</span>
+                    {{#if skill.skillHelper.showNodeBadge}}
+                    <span title="{{skill.skillHelper.nodeBadgeTitle}}">{{skill.skillHelper.nodeBadgeText}}</span>
                     {{/if}}
                 </div>
                 {{else}}

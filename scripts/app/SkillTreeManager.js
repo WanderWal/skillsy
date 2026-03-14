@@ -62,11 +62,22 @@ export class SkillTreeManager extends HandlebarsApplication {
             .filter((j) => j.getFlag(MODULE_ID, "isSkillTree"))
             .sort((a, b) => a.sort - b.sort)
             .map((skillTree, index, all) => ({
-                ...skillTree,
+                id: skillTree.id,
+                uuid: skillTree.uuid,
+                name: skillTree.name,
                 canMoveUp: index > 0,
                 canMoveDown: index < all.length - 1,
             }));
         return { skillTrees };
+    }
+
+    async resolveSkillTreeFromDataset(element) {
+        const uuid = element.dataset.uuid;
+        const id = element.dataset.id;
+        const fromUuidResult = uuid ? await fromUuid(uuid) : null;
+        if (fromUuidResult) return fromUuidResult;
+        if (id) return game.journal.get(id) ?? null;
+        return null;
     }
 
     async moveSkillTree(uuid, direction) {
@@ -116,8 +127,12 @@ export class SkillTreeManager extends HandlebarsApplication {
         html.querySelectorAll("button[name='edit']").forEach((button) => {
             button.addEventListener("click", async (event) => {
                 event.preventDefault();
-                const uuid = event.currentTarget.dataset.uuid;
-                const skillTree = await fromUuid(uuid);
+                const skillTree = await this.resolveSkillTreeFromDataset(event.currentTarget);
+                if (!skillTree) {
+                    ui.notifications.warn(l(`${MODULE_ID}.skill-tree-actor.no-skill-tree`));
+                    this.render(true);
+                    return;
+                }
                 new SkillTreeApplication(skillTree).render(true);
                 this.close();
             });
@@ -126,8 +141,12 @@ export class SkillTreeManager extends HandlebarsApplication {
         html.querySelectorAll("button[name='permissions']").forEach((button) => {
             button.addEventListener("click", async (event) => {
                 event.preventDefault();
-                const uuid = event.currentTarget.dataset.uuid;
-                const skillTree = await fromUuid(uuid);
+                const skillTree = await this.resolveSkillTreeFromDataset(event.currentTarget);
+                if (!skillTree) {
+                    ui.notifications.warn(l(`${MODULE_ID}.skill-tree-actor.no-skill-tree`));
+                    this.render(true);
+                    return;
+                }
                 new foundry.applications.apps.DocumentOwnershipConfig({document: skillTree}).render(true);
             });
         });
@@ -135,8 +154,12 @@ export class SkillTreeManager extends HandlebarsApplication {
         html.querySelectorAll("button[name='delete']").forEach((button) => {
             button.addEventListener("click", async (event) => {
                 event.preventDefault();
-                const uuid = event.currentTarget.dataset.uuid;
-                const skillTree = await fromUuid(uuid);
+                const skillTree = await this.resolveSkillTreeFromDataset(event.currentTarget);
+                if (!skillTree) {
+                    ui.notifications.warn(l(`${MODULE_ID}.skill-tree-actor.no-skill-tree`));
+                    this.render(true);
+                    return;
+                }
                 await skillTree.deleteDialog();
                 this.render(true);
             });

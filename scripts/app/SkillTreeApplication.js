@@ -1,4 +1,5 @@
 import { MODULE_ID } from "../consts.js";
+import { getPointBuildConfigs, getPlannedBuildSkillRows } from "../config.js";
 import { deepClone, HandlebarsApplication, l, mergeObject } from "../lib/utils.js";
 import { FormBuilder } from "../lib/formBuilder.js";
 
@@ -44,7 +45,7 @@ export class SkillTreeApplication extends HandlebarsApplication {
     constructor(skillTree) {
         super();
         if (typeof skillTree === "string") skillTree = fromUuidSync(skillTree);
-        this.skillTree = skillTree;
+        this.skillTree = skillTree?.documentName === "JournalEntry" ? skillTree : null;
     }
 
     static get LINKED_SKILL_RULE() {
@@ -119,7 +120,8 @@ export class SkillTreeApplication extends HandlebarsApplication {
     }
 
     get title() {
-        return l(`${MODULE_ID}.${this.APP_ID}.title`) + this.skillTree.name;
+        const name = this.skillTree?.name ?? "";
+        return l(`${MODULE_ID}.${this.APP_ID}.title`) + name;
     }
 
     async attemptRelink(pages) {
@@ -185,6 +187,11 @@ export class SkillTreeApplication extends HandlebarsApplication {
     }
 
     async _prepareContext(options) {
+        if (!this.skillTree) {
+            ui.notifications.warn(l(`${MODULE_ID}.skill-tree-actor.no-skill-tree`));
+            return { groups: [], useCircleStyle: false };
+        }
+
         const groups = foundry.utils.deepClone(this.skillTree.getFlag(MODULE_ID, "groups") ?? []);
         //gridTemplate
         const pages = Array.from(this.skillTree.pages);
@@ -572,6 +579,8 @@ export class SkillTreeApplication extends HandlebarsApplication {
 
     async editSkillForm(skillUuid) {
         const page = await fromUuid(skillUuid);
+        const buildCostsHtml = this.getSkillBuildCostsHtml(page);
+        const hasBuildCosts = !!buildCostsHtml;
         const fb = new FormBuilder();
         fb.object(page)
             .tab({ id: "aspect", icon: "fas fa-image", label: l(`${MODULE_ID}.${this.APP_ID}.edit-skill-aspect-tab`) })
@@ -582,7 +591,8 @@ export class SkillTreeApplication extends HandlebarsApplication {
             .select({ name: `flags.${MODULE_ID}.skillStyle`, label: l(`${MODULE_ID}.${this.APP_ID}.edit-skill-style`), hint: l(`${MODULE_ID}.${this.APP_ID}.edit-skill-style-hint`), options: { default: `${MODULE_ID}.${this.APP_ID}.edit-skill-style-default`, ...SkillTreeApplication.SKILL_STYLE } })
             .file({ name: `flags.${MODULE_ID}.sound`, type: "audio", label: l(`${MODULE_ID}.${this.APP_ID}.edit-group-sound`), hint: l(`${MODULE_ID}.${this.APP_ID}.edit-group-sound-hint`) })
             .tab({ id: "behavior", icon: "fas fa-cogs", label: l(`${MODULE_ID}.${this.APP_ID}.edit-skill-behavior-tab`) })
-            .number({ name: `flags.${MODULE_ID}.points`, label: l(`${MODULE_ID}.${this.APP_ID}.edit-skill-points`), hint: l(`${MODULE_ID}.${this.APP_ID}.edit-skill-points-hint`) })
+            .html(buildCostsHtml)
+            .number({ name: `flags.${MODULE_ID}.points`, label: l(`${MODULE_ID}.${this.APP_ID}.edit-skill-points`), hint: l(`${MODULE_ID}.${this.APP_ID}.${hasBuildCosts ? "edit-skill-points-derived-hint" : "edit-skill-points-hint"}`) })
             .number({name: `flags.${MODULE_ID}.allowIncompleteProgression`, label: l(`${MODULE_ID}.${this.APP_ID}.allow-incomplete-progression`), hint: l(`${MODULE_ID}.${this.APP_ID}.allow-incomplete-progression-hint`) })
             .number({name: `flags.${MODULE_ID}.linkedSkillRule`, label: l(`${MODULE_ID}.${this.APP_ID}.edit-skill-linked-skill-rule`), hint: l(`${MODULE_ID}.${this.APP_ID}.edit-skill-linked-skill-rule-hint`)})
             .number({ name: `flags.${MODULE_ID}.mutualExclusion`, label: l(`${MODULE_ID}.${this.APP_ID}.edit-skill-mutual-exclusion`), hint: l(`${MODULE_ID}.${this.APP_ID}.edit-skill-mutual-exclusion-hint`) })
@@ -638,6 +648,47 @@ export class SkillTreeApplication extends HandlebarsApplication {
         data.flags[MODULE_ID].connectedSkills = data.flags[MODULE_ID].connectedSkills.filter((s) => s !== skillUuid);
         await page.update(data);
         this.render(true);
+    }
+
+    getSkillBuildCostsHtml(skill) {
+        const pointBuilds = getPointBuildConfigs();
+        const rows = [];
+
+        for (const build of pointBuilds) {
+            const buildRow = getPlannedBuildSkillRows(build).find((row) => row.uuid === skill.uuid);
+            if (!buildRow) continue;
+            rows.push({
+                name: build.name,
+                cost: buildRow.maxCost,
+                manual: buildRow.manual,
+            });
+        }
+
+        if (!rows.length) return "";
+
+        return `
+        <div class="skill-build-cost-preview">
+            <h3>${l(`${MODULE_ID}.${this.APP_ID}.edit-skill-build-costs`)}</h3>
+            <p>${l(`${MODULE_ID}.${this.APP_ID}.edit-skill-build-costs-hint`)}</p>
+            <table>
+                <thead>
+                    <tr>
+                        <th>${l(`${MODULE_ID}.${this.APP_ID}.edit-skill-build-cost-build`)}</th>
+                        <th>${l(`${MODULE_ID}.${this.APP_ID}.edit-skill-build-cost-cost`)}</th>
+                        <th>${l(`${MODULE_ID}.${this.APP_ID}.edit-skill-build-cost-source`)}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${rows.map((row) => `
+                        <tr>
+                            <td>${row.name}</td>
+                            <td>${row.cost}</td>
+                            <td>${l(`${MODULE_ID}.${this.APP_ID}.${row.manual ? "edit-skill-build-cost-source-manual" : "edit-skill-build-cost-source-auto"}`)}</td>
+                        </tr>
+                    `).join("")}
+                </tbody>
+            </table>
+        </div>`;
     }
 
     getSkillRequirementsHtml(skill) {

@@ -1,0 +1,67 @@
+<div class="standard-form point-build-skill-picker-shell">
+    {{#if hasSkillTrees}}
+    <nav>
+        <div class="skill-tree-selector">
+            <button type="button" class="skill-tree-menu-toggle" name="toggle-skill-tree-menu" aria-expanded="false">
+                <h1>{{skillTreeName}}</h1>
+                <i class="fas fa-caret-down"></i>
+            </button>
+            <div class="skill-tree-menu" role="menu">
+                {{#each skillTreesOptions as |skillTree|}}
+                <button type="button" name="select-skill-tree" data-value="{{skillTree.key}}" class="{{#if skillTree.selected}}active{{/if}}">
+                    {{localize skillTree.label}}
+                </button>
+                {{/each}}
+            </div>
+        </div>
+
+        <div class="picker-summary">
+            <span>{{localize "skill-tree.point-build-skill-picker.selected-count"}}</span>
+            <strong>{{selectedCount}}</strong>
+        </div>
+    </nav>
+
+    <p class="point-build-skill-picker-hint">{{localize "skill-tree.point-build-skill-picker.hint"}}</p>
+
+    <div class="skill-groups">
+        {{#each groups as |group|}}
+        <div class="skill-group {{#if group.blurBackground}}blur-background{{/if}}"
+            style="--group-color: {{group.color}}; background-image: url('{{group.image}}');"
+            data-group-id="{{group.id}}">
+
+            {{#if group.image}}
+            <img class="group-background {{#if group.blurBackground}}blur-background{{/if}}" src="{{group.image}}"
+                alt="{{group.name}}" title="{{group.name}}" />
+            {{/if}}
+
+            <div class="h1-container">
+                <h1>{{group.name}}</h1>
+            </div>
+
+            <div class="skill-grid" style="grid-template: {{group.gridTemplate}};">
+                {{#each group.children as |skill|}}
+                {{#if skill.name}}
+                <div class="skill-container {{#if skill.overrideStyle}}{{skill.overrideStyleClass}}{{else}}{{#if ../../useCircleStyle}}round{{/if}}{{/if}} {{#if skill.selected}}selected is-unlocked{{/if}}"
+                    data-row="{{skill.row}}" data-col="{{skill.col}}" data-uuid="{{skill.uuid}}" title="{{skill.name}}">
+                    <img src="{{skill.src}}" alt="{{skill.name}}" title="{{skill.name}}" />
+                    {{#if skill.points}}
+                    <span title="{{localize "skill-tree.skill-tree-actor.cost"}} {{skill.points}}">{{skill.points}}</span>
+                    {{/if}}
+                </div>
+                {{else}}
+                <div class="skill-container empty" data-row="{{skill.row}}" data-col="{{skill.col}}"></div>
+                {{/if}}
+                {{/each}}
+            </div>
+        </div>
+        {{/each}}
+    </div>
+    {{else}}
+    <p class="point-build-skill-picker-empty">{{localize "skill-tree.skill-tree-actor.no-skill-trees"}}</p>
+    {{/if}}
+
+    <footer>
+        <button type="button" name="cancel-selection"><i class="fas fa-xmark"></i> {{localize "skill-tree.point-build-skill-picker.cancel"}}</button>
+        <button type="button" name="save-selection"><i class="fas fa-check"></i> {{localize "skill-tree.point-build-skill-picker.save"}}</button>
+    </footer>
+</div>

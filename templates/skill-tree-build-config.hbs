@@ -1,0 +1,57 @@
+<div class="point-build-config-shell">
+    <table>
+        <thead>
+            <tr>
+                <th>{{localize "skill-tree.skill-tree-build-config.name"}}</th>
+                <th>{{localize "skill-tree.skill-tree-build-config.max-points"}}</th>
+                <th>{{localize "skill-tree.skill-tree-build-config.skills"}}</th>
+                <th>{{localize "skill-tree.skill-tree-build-config.final-costs"}}</th>
+                <th>{{localize "skill-tree.skill-tree-build-config.actions"}}</th>
+            </tr>
+        </thead>
+        <tbody>
+            {{#each builds as |build|}}
+            <tr>
+                <td><input type="text" name="build-name" value="{{build.name}}" data-index="{{build.index}}" /></td>
+                <td>
+                    <input class="{{#if build.pointSummary.mismatch}}warning{{/if}}" type="number" min="0" step="1" name="build-max-points" value="{{build.maxPoints}}" data-index="{{build.index}}" />
+                </td>
+                <td><button type="button" name="edit-build-skills" data-index="{{build.index}}"><i class="fas fa-list"></i> {{localize "skill-tree.skill-tree-build-config.edit-skills"}} ({{build.plannedSkillsCount}})</button></td>
+                <td>
+                    <div class="final-costs-preview">
+                        {{#if build.finalCosts.length}}
+                            {{#each build.finalCosts as |row|}}
+                            <div class="final-cost-row {{#if row.manual}}manual{{/if}}">
+                                <span title="{{row.label}}">{{row.label}}</span>
+                                <strong title="{{localize "skill-tree.skill-tree-build-config.build-cost"}}">{{row.buildCost}}</strong>
+                                {{#if row.showDerived}}
+                                <small title="{{localize "skill-tree.skill-tree-build-config.derived-cost"}}">{{row.derivedCost}}</small>
+                                {{/if}}
+                            </div>
+                            {{/each}}
+                        {{else}}
+                            <span>-</span>
+                        {{/if}}
+                    </div>
+                </td>
+                <td>
+                    <div class="build-row-actions">
+                        {{#if build.pointSummary.mismatch}}
+                        <span class="build-mismatch-indicator" title="{{localize "skill-tree.skill-tree-build-config.mismatch-warning"}} ({{build.pointSummary.total}} / {{build.pointSummary.maxPoints}})"><i class="fas fa-triangle-exclamation"></i></span>
+                        {{/if}}
+                        <button type="button" name="edit-build-costs" data-index="{{build.index}}"><i class="fas fa-coins"></i></button>
+                        <button type="button" name="move-up" data-index="{{build.index}}" {{#unless build.canMoveUp}}disabled{{/unless}}><i class="fas fa-arrow-up"></i></button>
+                        <button type="button" name="move-down" data-index="{{build.index}}" {{#unless build.canMoveDown}}disabled{{/unless}}><i class="fas fa-arrow-down"></i></button>
+                        <button type="button" name="delete-build" data-index="{{build.index}}"><i class="fas fa-trash"></i></button>
+                    </div>
+                </td>
+            </tr>
+            {{/each}}
+        </tbody>
+    </table>
+
+    <footer>
+        <button type="button" name="new-build"><i class="fas fa-plus"></i> {{localize "skill-tree.skill-tree-build-config.new-build"}}</button>
+        <button type="button" name="save"><i class="fas fa-check"></i> {{localize "skill-tree.skill-tree-build-config.save"}}</button>
+    </footer>
+</div>

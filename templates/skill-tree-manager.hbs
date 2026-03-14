@@ -14,15 +14,15 @@
             {{#each skillTrees as |skillTree|}}
             <tr>
                 <td>{{skillTree.name}}</td>
-                <td><button type="button" name="move-up" data-uuid="{{skillTree.uuid}}" {{#unless skillTree.canMoveUp}}disabled{{/unless}}><i
+                <td><button type="button" name="move-up" data-uuid="{{skillTree.uuid}}" data-id="{{skillTree.id}}" {{#unless skillTree.canMoveUp}}disabled{{/unless}}><i
                             class="fas fa-arrow-up"></i></button></td>
-                <td><button type="button" name="move-down" data-uuid="{{skillTree.uuid}}" {{#unless skillTree.canMoveDown}}disabled{{/unless}}><i
+                <td><button type="button" name="move-down" data-uuid="{{skillTree.uuid}}" data-id="{{skillTree.id}}" {{#unless skillTree.canMoveDown}}disabled{{/unless}}><i
                             class="fas fa-arrow-down"></i></button></td>
-                <td><button type="button" name="edit" data-uuid="{{skillTree.uuid}}"><i
+                <td><button type="button" name="edit" data-uuid="{{skillTree.uuid}}" data-id="{{skillTree.id}}"><i
                             class="fas fa-edit"></i></button></td>
-                <td><button type="button" name="permissions" data-uuid="{{skillTree.uuid}}"><i
+                <td><button type="button" name="permissions" data-uuid="{{skillTree.uuid}}" data-id="{{skillTree.id}}"><i
                             class="fas fa-user-lock"></i></button></td>
-                <td><button type="button" name="delete" data-uuid="{{skillTree.uuid}}"><i
+                <td><button type="button" name="delete" data-uuid="{{skillTree.uuid}}" data-id="{{skillTree.id}}"><i
                             class="fas fa-trash"></i></button></td>
             </tr>
             {{/each}}

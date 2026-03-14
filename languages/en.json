@@ -17,6 +17,11 @@
             "playersCantRemovePoints": {
                 "name": "Players Can't Remove Points",
                 "hint": "Players won't be able to remove points from skills they already unlocked"
+            },
+            "point-build-config": {
+                "name": "Point Builds",
+                "label": "Configure Point Builds",
+                "hint": "Configure build names and max points for automatic point calculation"
             }
         },
         "skill-tree-actor": {
@@ -26,8 +31,40 @@
             "removed-items": "Removed items: ",
             "no-skill-trees": "There are no Skill Trees available for this actor. Make sure the GM has created a Skill Tree and granted the proper permissions.",
             "prerequisites": "Prerequisites:",
+            "cost": "Cost:",
             "toggle-fullscreen": "Toggle Fullscreen",
-            "item-not-found": "Item not found: %s"
+            "item-not-found": "Item not found: %s",
+            "build": "Build"
+        },
+        "skill-tree-build-config": {
+            "title": "Point Build Configuration",
+            "name": "Build Name",
+            "max-points": "Max Points",
+            "skills": "Skills",
+            "final-costs": "Final Costs",
+            "actions": "Actions",
+            "edit-skills": "Edit Skills",
+            "edit-costs": "Edit Costs",
+            "edit-skills-title": "Edit Build Skills: %s",
+            "edit-skills-hint": "Select skills for this build from any skill tree.",
+            "edit-costs-title": "Set Skill Costs: %s",
+            "edit-skills-costs-hint": "Optional: set manual max costs per skill. Set to 0 to keep automatic distribution.",
+            "edit-skills-costs-field-hint": "Manual max cost override. 0 means automatic.",
+            "build-cost": "Build-specific cost",
+            "derived-cost": "Derived actual skill points",
+            "no-skills": "Add skills to the build before editing costs.",
+            "mismatch-warning": "Skill totals do not match Max Points",
+            "delete": "Delete",
+            "new-build": "New Build",
+            "save": "Save",
+            "saved": "Point build configuration saved"
+        },
+        "point-build-skill-picker": {
+            "title": "Select Build Skills: %s",
+            "hint": "Click skills to add or remove them from this build. Switch skill trees using the menu above.",
+            "selected-count": "Selected",
+            "cancel": "Cancel",
+            "save": "Apply Selection"
         },
         "skill-tree-manager": {
             "title": "Skill Tree Manager",
@@ -83,6 +120,14 @@
             "edit-skill-style-default": "Default",
             "edit-skill-points": "Points",
             "edit-skill-points-hint": "The number of points required to unlock this skill.",
+            "edit-skill-points-derived-hint": "This value is derived from Point Build Configuration across all builds that include this skill.",
+            "edit-skill-build-costs": "Effective Build Costs",
+            "edit-skill-build-costs-hint": "These are the current costs derived from Point Build Configuration for this skill.",
+            "edit-skill-build-cost-build": "Build",
+            "edit-skill-build-cost-cost": "Cost",
+            "edit-skill-build-cost-source": "Source",
+            "edit-skill-build-cost-source-manual": "Manual",
+            "edit-skill-build-cost-source-auto": "Automatic",
             "edit-skill-item": "Linked Items",
             "edit-skill-item-hint": "When a skill is unlocked, its linked items are added to the actor; when removed, the items are also removed. For skills requiring multiple points, items are granted based on points spent. For example, with a 3-point skill and 3 items, one item is granted per point. If 5 points are required for 3 items, one item is granted for every 2 points, with the last item given on the fifth point.",
             "edit-skill-connected-skills": "Required Skills",
