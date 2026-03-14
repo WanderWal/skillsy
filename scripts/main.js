@@ -1,11 +1,65 @@
 import { getSkillPoints, getSkillTreePoints, setSkillPoints, SkillTreeActor, skillTreeMatchesActorRequirements } from "./app/SkillTreeActor.js";
 import { SkillTreeApplication } from "./app/SkillTreeApplication.js";
 import { SkillTreeManager } from "./app/SkillTreeManager.js";
-import { initConfig } from "./config.js";
+import { getPointBuildConfigs, initConfig } from "./config.js";
 import { l } from "./lib/utils.js";
 import { getSetting, registerSettings } from "./settings.js";
 
 import { MODULE_ID } from "./consts.js";
+
+function getNumeric(value) {
+    if (!Number.isFinite(Number(value))) return null;
+    return parseInt(value);
+}
+
+function getActorLevel(actor) {
+    const directLevel = getNumeric(actor?.system?.details?.level);
+    if (directLevel !== null) return Math.max(0, directLevel);
+
+    const valueLevel = getNumeric(actor?.system?.details?.level?.value);
+    if (valueLevel !== null) return Math.max(0, valueLevel);
+
+    const classes = actor?.itemTypes?.class ?? actor?.items?.filter((item) => item.type === "class") ?? [];
+    const summedClassLevels = classes.reduce((sum, classItem) => {
+        const classLevel = getNumeric(classItem?.system?.levels) ?? getNumeric(classItem?.system?.level) ?? 0;
+        return sum + Math.max(0, classLevel);
+    }, 0);
+
+    return Math.max(0, summedClassLevels);
+}
+
+function getTargetSkillPointsForLevel(level) {
+    const pointsPerLevel = getNumeric(getSetting("skillPointsPerLevel")) ?? 0;
+    const flatBonus = getNumeric(getSetting("skillPointsFlatBonus")) ?? 0;
+    return Math.max(0, flatBonus + Math.max(0, level) * pointsPerLevel);
+}
+
+async function syncActorSkillPointsByLevel(actor) {
+    if (!actor) return;
+    if (!game.user.isGM) return;
+    if (!getSetting("autoSkillPointsByLevel")) return;
+
+    const level = getActorLevel(actor);
+    const targetSkillPoints = getTargetSkillPointsForLevel(level);
+    const pointBuilds = getPointBuildConfigs();
+
+    if (pointBuilds.length) {
+        const adjustmentUpdates = {};
+        for (const build of pointBuilds) {
+            const buildMaxPoints = getNumeric(build?.maxPoints) ?? 0;
+            const desiredAdjustment = targetSkillPoints - buildMaxPoints;
+            const currentAdjustment = getNumeric(actor.getFlag(MODULE_ID, `buildPointAdjustments.${build.id}`)) ?? 0;
+            if (desiredAdjustment === currentAdjustment) continue;
+            adjustmentUpdates[`flags.${MODULE_ID}.buildPointAdjustments.${build.id}`] = desiredAdjustment;
+        }
+
+        if (Object.keys(adjustmentUpdates).length) await actor.update(adjustmentUpdates);
+        return;
+    }
+
+    const current = getNumeric(actor.getFlag(MODULE_ID, "skillPoints")) ?? 0;
+    if (current !== targetSkillPoints) await setSkillPoints(actor, null, targetSkillPoints);
+}
 
 Hooks.on("init", () => {
     initConfig();
@@ -30,6 +84,10 @@ Hooks.on("ready", () => {
     };
     module.API = API;
 
+    for (const actor of game.actors ?? []) {
+        syncActorSkillPointsByLevel(actor);
+    }
+
     if (!game.user.isGM) return;
 
     Hooks.on("getHeaderControlsJournalSheetV2", (app, buttons) => {
@@ -44,6 +102,23 @@ Hooks.on("ready", () => {
             },
         });
     });
+});
+
+Hooks.on("updateActor", (actor, update) => {
+    if (!getSetting("autoSkillPointsByLevel")) return;
+
+    const levelChanged = foundry.utils.hasProperty(update, "system.details.level")
+        || foundry.utils.hasProperty(update, "system.details.level.value");
+
+    if (!levelChanged) return;
+    syncActorSkillPointsByLevel(actor);
+});
+
+Hooks.on("updateItem", (item) => {
+    if (!getSetting("autoSkillPointsByLevel")) return;
+    if (item.type !== "class") return;
+    if (!item.actor) return;
+    syncActorSkillPointsByLevel(item.actor);
 });
 
 Hooks.on("getActorSheetHeaderButtons", (app, buttons) => {

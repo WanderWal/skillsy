@@ -18,6 +18,18 @@
                 "name": "Players Can't Remove Points",
                 "hint": "Players won't be able to remove points from skills they already unlocked"
             },
+            "autoSkillPointsByLevel": {
+                "name": "Auto Skill Points from Level",
+                "hint": "Automatically sets actor skill points from their level using the settings below."
+            },
+            "skillPointsPerLevel": {
+                "name": "Skill Points Per Level",
+                "hint": "How many total skill points each level grants when auto-scaling is enabled."
+            },
+            "skillPointsFlatBonus": {
+                "name": "Skill Point Flat Bonus",
+                "hint": "A flat number of total skill points added on top of level-based points when auto-scaling is enabled."
+            },
             "point-build-config": {
                 "name": "Point Builds",
                 "label": "Configure Point Builds",
