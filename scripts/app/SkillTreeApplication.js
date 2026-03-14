@@ -939,6 +939,23 @@ export class SkillTreeApplication extends HandlebarsApplication {
     }
 
     setupSkillFormInteractivity() {
+        // Make linked item tags open their item sheets on click
+        const itemUuidsContainer = this.element.querySelector(`document-tags[name="flags.${MODULE_ID}.itemUuids"]`);
+        if (itemUuidsContainer) {
+            itemUuidsContainer.addEventListener("click", async (event) => {
+                if (event.target.closest("[data-action='delete'], .remove, .delete")) return;
+                const tag = event.target.closest(".tag");
+                if (!tag) return;
+                const uuid = tag.dataset.uuid;
+                if (!uuid) return;
+                const item = await fromUuid(uuid);
+                item?.sheet?.render(true);
+            });
+            itemUuidsContainer.querySelectorAll(".tag").forEach((tag) => {
+                tag.style.cursor = "pointer";
+            });
+        }
+
         const table = this.element.querySelector(".skill-requirements");
         const addButton = table.querySelector("button[name='add-requirement']");
         const deleteButton = table.querySelectorAll("button[id='delete-requirement']");
