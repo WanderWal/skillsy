@@ -87,7 +87,11 @@
             "name": "Name",
             "edit": "Edit",
             "permissions": "Permissions",
-            "delete": "Delete"
+            "delete": "Delete",
+            "resync-actors": "Resync All Actors",
+            "resync-complete": "Resync complete: %u of %p actors updated.",
+            "resync-failed": "Failed to resync actors. See console for details.",
+            "resync-unavailable": "Resync API is unavailable. Reload the world and try again."
         },
         "skill-tree-application": {
             "title": "Skill Tree Editor: ",

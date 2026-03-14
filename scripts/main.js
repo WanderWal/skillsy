@@ -34,10 +34,11 @@ function getTargetSkillPointsForLevel(level) {
     return Math.max(0, flatBonus + Math.max(0, level) * pointsPerLevel);
 }
 
-async function syncActorSkillPointsByLevel(actor) {
+async function syncActorSkillPointsByLevel(actor, options = {}) {
+    const { ignoreSetting = false } = options;
     if (!actor) return;
     if (!game.user.isGM) return;
-    if (!getSetting("autoSkillPointsByLevel")) return;
+    if (!ignoreSetting && !getSetting("autoSkillPointsByLevel")) return;
 
     const level = getActorLevel(actor);
     const targetSkillPoints = getTargetSkillPointsForLevel(level);
@@ -53,12 +54,35 @@ async function syncActorSkillPointsByLevel(actor) {
             adjustmentUpdates[`flags.${MODULE_ID}.buildPointAdjustments.${build.id}`] = desiredAdjustment;
         }
 
-        if (Object.keys(adjustmentUpdates).length) await actor.update(adjustmentUpdates);
-        return;
+        if (Object.keys(adjustmentUpdates).length) {
+            await actor.update(adjustmentUpdates);
+            return true;
+        }
+        return false;
     }
 
     const current = getNumeric(actor.getFlag(MODULE_ID, "skillPoints")) ?? 0;
-    if (current !== targetSkillPoints) await setSkillPoints(actor, null, targetSkillPoints);
+    if (current !== targetSkillPoints) {
+        await setSkillPoints(actor, null, targetSkillPoints);
+        return true;
+    }
+
+    return false;
+}
+
+async function resyncAllActorsSkillPointsByLevel(options = {}) {
+    const { ignoreSetting = true } = options;
+    if (!game.user.isGM) return { processed: 0, updated: 0 };
+
+    let processed = 0;
+    let updated = 0;
+    for (const actor of game.actors ?? []) {
+        processed += 1;
+        const didUpdate = await syncActorSkillPointsByLevel(actor, { ignoreSetting });
+        if (didUpdate) updated += 1;
+    }
+
+    return { processed, updated };
 }
 
 Hooks.on("init", () => {
@@ -75,6 +99,9 @@ Hooks.on("ready", () => {
             await setSkillPoints(actor, options.skillTree, newPoints, { buildId: options.buildId });
             return newPoints;
         },
+        resyncAllActorsSkillPoints: async (options = {}) => {
+            return await resyncAllActorsSkillPointsByLevel(options);
+        },
         getSkillTreePoints,
         apps: {
             SkillTreeActor,
@@ -84,9 +111,7 @@ Hooks.on("ready", () => {
     };
     module.API = API;
 
-    for (const actor of game.actors ?? []) {
-        syncActorSkillPointsByLevel(actor);
-    }
+    resyncAllActorsSkillPointsByLevel({ ignoreSetting: false });
 
     if (!game.user.isGM) return;
 

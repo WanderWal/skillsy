@@ -128,6 +128,30 @@ export class SkillTreeManager extends HandlebarsApplication {
             })
             this.render(true);
         });
+
+        const resyncActorsButton = html.querySelector("button[name='resync-actors']");
+        resyncActorsButton?.addEventListener("click", async (event) => {
+            event.preventDefault();
+            const api = game.modules.get(MODULE_ID)?.API;
+            if (!api?.resyncAllActorsSkillPoints) {
+                ui.notifications.warn(l(`${MODULE_ID}.skill-tree-manager.resync-unavailable`));
+                return;
+            }
+
+            resyncActorsButton.disabled = true;
+            try {
+                const result = await api.resyncAllActorsSkillPoints();
+                const message = l(`${MODULE_ID}.skill-tree-manager.resync-complete`)
+                    .replace("%p", `${result?.processed ?? 0}`)
+                    .replace("%u", `${result?.updated ?? 0}`);
+                ui.notifications.info(message);
+            } catch (error) {
+                console.error(error);
+                ui.notifications.error(l(`${MODULE_ID}.skill-tree-manager.resync-failed`));
+            } finally {
+                resyncActorsButton.disabled = false;
+            }
+        });
         html.querySelectorAll("button[name='edit']").forEach((button) => {
             button.addEventListener("click", async (event) => {
                 event.preventDefault();
