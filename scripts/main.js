@@ -12,6 +12,44 @@ function getNumeric(value) {
     return parseInt(value);
 }
 
+function parseSkillPointsLevelTable(rawTable) {
+    const table = new Map();
+    if (typeof rawTable !== "string" || !rawTable.trim().length) return table;
+
+    const chunks = rawTable
+        .split(/[,\n;]/)
+        .map((chunk) => chunk.trim())
+        .filter((chunk) => chunk.length > 0);
+
+    for (const chunk of chunks) {
+        const match = chunk.match(/^(\d+)\s*[:=]\s*([+-]?\d+)$/);
+        if (!match) continue;
+        const level = parseInt(match[1]);
+        const token = match[2];
+        const amount = parseInt(token);
+        if (!Number.isFinite(level) || level < 1) continue;
+        if (!Number.isFinite(amount)) continue;
+
+        table.set(level, {
+            relative: token.startsWith("+") || token.startsWith("-"),
+            amount,
+        });
+    }
+
+    return table;
+}
+
+function getSkillPointsFromLevelTable(level, table) {
+    let total = 0;
+    for (let currentLevel = 1; currentLevel <= Math.max(0, level); currentLevel++) {
+        const row = table.get(currentLevel);
+        if (!row) continue;
+        if (row.relative) total += row.amount;
+        else total = row.amount;
+    }
+    return Math.max(0, total);
+}
+
 function getActorLevel(actor) {
     const directLevel = getNumeric(actor?.system?.details?.level);
     if (directLevel !== null) return Math.max(0, directLevel);
@@ -29,6 +67,10 @@ function getActorLevel(actor) {
 }
 
 function getTargetSkillPointsForLevel(level) {
+    const levelTableRaw = getSetting("skillPointsLevelTable");
+    const levelTable = parseSkillPointsLevelTable(levelTableRaw);
+    if (levelTable.size) return getSkillPointsFromLevelTable(level, levelTable);
+
     const pointsPerLevel = getNumeric(getSetting("skillPointsPerLevel")) ?? 0;
     const flatBonus = getNumeric(getSetting("skillPointsFlatBonus")) ?? 0;
     return Math.max(0, flatBonus + Math.max(0, level) * pointsPerLevel);

@@ -1,5 +1,6 @@
 import {SkillTreeActor} from "./app/SkillTreeActor.js";
 import {SkillTreeManager} from "./app/SkillTreeManager.js";
+import { SkillPointsLevelTableConfig } from "./app/SkillPointsLevelTableConfig.js";
 import {MODULE_ID} from "./consts.js";
 
 const SETTING_CACHE = {};
@@ -38,6 +39,14 @@ export function registerSettings() {
             config: true,
             default: false,
             type: Boolean,
+        },
+        skillPointsLevelTable: {
+            name: `${MODULE_ID}.settings.skillPointsLevelTable.name`,
+            hint: `${MODULE_ID}.settings.skillPointsLevelTable.hint`,
+            scope: "world",
+            config: false,
+            default: "",
+            type: String,
         },
         skillPointsPerLevel: {
             name: `${MODULE_ID}.settings.skillPointsPerLevel.name`,
@@ -78,6 +87,15 @@ export function registerSettings() {
         hint: `${MODULE_ID}.settings.skill-tree-manager.hint`,
         icon: "fas fa-code-branch",
         type: SkillTreeManager,
+        restricted: true,
+    });
+
+    game.settings.registerMenu(MODULE_ID, "skill-points-level-table", {
+        name: `${MODULE_ID}.settings.skill-points-level-table.name`,
+        label: `${MODULE_ID}.settings.skill-points-level-table.label`,
+        hint: `${MODULE_ID}.settings.skill-points-level-table.hint`,
+        icon: "fas fa-table-list",
+        type: SkillPointsLevelTableConfig,
         restricted: true,
     });
 }

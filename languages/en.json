@@ -22,6 +22,10 @@
                 "name": "Auto Skill Points from Level",
                 "hint": "Automatically sets actor skill points from their level using the settings below."
             },
+            "skillPointsLevelTable": {
+                "name": "Skill Points Level Table",
+                "hint": "Optional override table. Format one entry per level, separated by commas: 2=2,3=+4,4=+1. Use N=V for absolute total at level N, or N=+V/N=-V for relative change at that level. If empty, the formula settings below are used."
+            },
             "skillPointsPerLevel": {
                 "name": "Skill Points Per Level",
                 "hint": "How many total skill points each level grants when auto-scaling is enabled."
@@ -34,6 +38,11 @@
                 "name": "Point Builds",
                 "label": "Configure Point Builds",
                 "hint": "Configure build names and max points for automatic point calculation"
+            },
+            "skill-points-level-table": {
+                "name": "Skill Points by Level Table",
+                "label": "Configure Level Table",
+                "hint": "Configure skill points per level using a row-based table."
             }
         },
         "skill-tree-actor": {
@@ -70,6 +79,21 @@
             "new-build": "New Build",
             "save": "Save",
             "saved": "Point build configuration saved"
+        },
+        "skill-points-level-table-config": {
+            "title": "Skill Points by Level Table",
+            "hint": "Set an absolute total or relative change for each level.",
+            "level": "Level",
+            "type": "Rule Type",
+            "type-absolute": "Set Total",
+            "type-relative": "Add/Subtract",
+            "value": "Value",
+            "actions": "Actions",
+            "empty": "No rules yet. Add a row to start.",
+            "add-row": "Add Row",
+            "save": "Save",
+            "cancel": "Cancel",
+            "saved": "Skill points level table saved"
         },
         "point-build-skill-picker": {
             "title": "Select Build Skills: %s",
