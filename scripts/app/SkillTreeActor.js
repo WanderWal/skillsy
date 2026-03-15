@@ -15,6 +15,33 @@ function normalizeStringList(values) {
         .filter((value) => value.length > 0);
 }
 
+function getNumeric(value) {
+    if (!Number.isFinite(Number(value))) return null;
+    return parseInt(value);
+}
+
+function normalizeRequiredLevel(value) {
+    const parsed = getNumeric(value);
+    if (parsed === null) return null;
+    return Math.max(0, parsed);
+}
+
+function getActorLevel(actor) {
+    const directLevel = getNumeric(actor?.system?.details?.level);
+    if (directLevel !== null) return Math.max(0, directLevel);
+
+    const valueLevel = getNumeric(actor?.system?.details?.level?.value);
+    if (valueLevel !== null) return Math.max(0, valueLevel);
+
+    const classes = actor?.itemTypes?.class ?? actor?.items?.filter((item) => item.type === "class") ?? [];
+    const summedClassLevels = classes.reduce((sum, classItem) => {
+        const classLevel = getNumeric(classItem?.system?.levels) ?? getNumeric(classItem?.system?.level) ?? 0;
+        return sum + Math.max(0, classLevel);
+    }, 0);
+
+    return Math.max(0, summedClassLevels);
+}
+
 function normalizeUuidList(values) {
     const list = Array.isArray(values) ? values : [];
     return list
@@ -114,9 +141,20 @@ export function getActorClassIdentifiers(actor) {
 
 export function skillTreeMatchesActorRequirements(skillTree, actor) {
     const requiredClasses = normalizeStringList(skillTree.getFlag(MODULE_ID, "requiredClasses") ?? []);
-    if (!requiredClasses.length) return true;
-    const actorClasses = getActorClassIdentifiers(actor);
-    return requiredClasses.some((requiredClass) => actorClasses.has(requiredClass));
+    if (requiredClasses.length) {
+        const actorClasses = getActorClassIdentifiers(actor);
+        const classRequirementMet = requiredClasses.some((requiredClass) => actorClasses.has(requiredClass));
+        if (!classRequirementMet) return false;
+    }
+
+    const requiredMinLevel = normalizeRequiredLevel(skillTree.getFlag(MODULE_ID, "requiredMinLevel"));
+    const requiredMaxLevel = normalizeRequiredLevel(skillTree.getFlag(MODULE_ID, "requiredMaxLevel"));
+    if (requiredMinLevel === null && requiredMaxLevel === null) return true;
+
+    const actorLevel = getActorLevel(actor);
+    if (requiredMinLevel !== null && actorLevel < requiredMinLevel) return false;
+    if (requiredMaxLevel !== null && actorLevel > requiredMaxLevel) return false;
+    return true;
 }
 
 function hasPointBuilds() {

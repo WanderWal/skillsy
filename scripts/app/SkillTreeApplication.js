@@ -749,6 +749,8 @@ export class SkillTreeApplication extends HandlebarsApplication {
             .text({ name: "name", label: l(`${MODULE_ID}.${this.APP_ID}.configure-skill-tree-name`) })
             .file({ name: `flags.${MODULE_ID}.pointsImage`, type: "image", label: l(`${MODULE_ID}.${this.APP_ID}.configure-skill-tree-image`), hint: l(`${MODULE_ID}.${this.APP_ID}.configure-skill-tree-image-hint`) })
             .text({ name: `flags.${MODULE_ID}.requiredClasses`, label: l(`${MODULE_ID}.${this.APP_ID}.configure-skill-tree-required-classes`), hint: l(`${MODULE_ID}.${this.APP_ID}.configure-skill-tree-required-classes-hint`) })
+            .number({ name: `flags.${MODULE_ID}.requiredMinLevel`, label: l(`${MODULE_ID}.${this.APP_ID}.configure-skill-tree-required-min-level`), hint: l(`${MODULE_ID}.${this.APP_ID}.configure-skill-tree-required-min-level-hint`), min: 0 })
+            .number({ name: `flags.${MODULE_ID}.requiredMaxLevel`, label: l(`${MODULE_ID}.${this.APP_ID}.configure-skill-tree-required-max-level`), hint: l(`${MODULE_ID}.${this.APP_ID}.configure-skill-tree-required-max-level-hint`), min: 0 })
             .select({ name: `flags.${MODULE_ID}.linkedSkillRule`, label: l(`${MODULE_ID}.${this.APP_ID}.linked-skill-rule`), hint: l(`${MODULE_ID}.${this.APP_ID}.linked-skill-rule-hint`), options: SkillTreeApplication.LINKED_SKILL_RULE })
             .select({ name: `flags.${MODULE_ID}.multipleItemsRule`, label: l(`${MODULE_ID}.${this.APP_ID}.multiple-items-rule`), hint: l(`${MODULE_ID}.${this.APP_ID}.multiple-items-rule-hint`), options: SkillTreeApplication.MULTIPLE_ITEMS_RULE })
             .select({ name: `flags.${MODULE_ID}.skillStyle`, label: l(`${MODULE_ID}.${this.APP_ID}.skill-style`), hint: l(`${MODULE_ID}.${this.APP_ID}.skill-style-hint`), options: SkillTreeApplication.SKILL_STYLE })
@@ -766,6 +768,14 @@ export class SkillTreeApplication extends HandlebarsApplication {
         } else if (!Array.isArray(rawRequiredClasses)) {
             data.flags[MODULE_ID].requiredClasses = [];
         }
+
+        const rawRequiredMinLevel = data?.flags?.[MODULE_ID]?.requiredMinLevel;
+        const requiredMinLevel = Number.isFinite(Number(rawRequiredMinLevel)) ? Math.max(0, parseInt(rawRequiredMinLevel)) : null;
+        data.flags[MODULE_ID].requiredMinLevel = requiredMinLevel;
+
+        const rawRequiredMaxLevel = data?.flags?.[MODULE_ID]?.requiredMaxLevel;
+        const requiredMaxLevel = Number.isFinite(Number(rawRequiredMaxLevel)) ? Math.max(0, parseInt(rawRequiredMaxLevel)) : null;
+        data.flags[MODULE_ID].requiredMaxLevel = requiredMaxLevel;
 
         await this.skillTree.update(data);
         this.render(true);
