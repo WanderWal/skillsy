@@ -643,9 +643,15 @@
 }
 
 .skill-tree-sheet-tab .skill-tree-sheet-tab-content .skill-groups {
-  width: min-content;
-  min-width: 0;
-  margin-inline: auto;
+  width: max-content;
+  min-width: 100%;
+  margin-inline: 0;
+  overflow-x: auto;
+  overflow-y: visible;
+}
+
+.skill-tree-sheet-tab .skill-tree-sheet-tab-content .skill-groups .skill-group {
+  flex: 0 0 auto;
 }
 
 nav.sheet-navigation.tabs [data-tab="skill-tree"] {
