@@ -1,6 +1,7 @@
 import {SkillTreeActor} from "./app/SkillTreeActor.js";
 import {SkillTreeManager} from "./app/SkillTreeManager.js";
 import { SkillPointsLevelTableConfig } from "./app/SkillPointsLevelTableConfig.js";
+import { SkillRemovalRequestManager } from "./app/SkillRemovalRequestManager.js";
 import {MODULE_ID} from "./consts.js";
 
 const SETTING_CACHE = {};
@@ -27,6 +28,14 @@ export function registerSettings() {
         playersCantRemovePoints: {
             name: `${MODULE_ID}.settings.playersCantRemovePoints.name`,
             hint: `${MODULE_ID}.settings.playersCantRemovePoints.hint`,
+            scope: "world",
+            config: true,
+            default: false,
+            type: Boolean,
+        },
+        playersRequestSkillRemoval: {
+            name: `${MODULE_ID}.settings.playersRequestSkillRemoval.name`,
+            hint: `${MODULE_ID}.settings.playersRequestSkillRemoval.hint`,
             scope: "world",
             config: true,
             default: false,
@@ -96,6 +105,15 @@ export function registerSettings() {
         hint: `${MODULE_ID}.settings.skill-points-level-table.hint`,
         icon: "fas fa-table-list",
         type: SkillPointsLevelTableConfig,
+        restricted: true,
+    });
+
+    game.settings.registerMenu(MODULE_ID, "skill-removal-request-manager", {
+        name: `${MODULE_ID}.settings.skill-removal-request-manager.name`,
+        label: `${MODULE_ID}.settings.skill-removal-request-manager.label`,
+        hint: `${MODULE_ID}.settings.skill-removal-request-manager.hint`,
+        icon: "fas fa-clipboard-check",
+        type: SkillRemovalRequestManager,
         restricted: true,
     });
 }

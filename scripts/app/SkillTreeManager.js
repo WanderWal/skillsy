@@ -2,6 +2,7 @@ import { MODULE_ID } from "../consts.js";
 import { HandlebarsApplication, l } from "../lib/utils.js";
 import {SkillTreeApplication} from "./SkillTreeApplication.js";
 import {FormBuilder} from "../lib/formBuilder.js";
+import { SkillRemovalRequestManager } from "./SkillRemovalRequestManager.js";
 
 export class SkillTreeManager extends HandlebarsApplication {
     constructor() {
@@ -152,6 +153,13 @@ export class SkillTreeManager extends HandlebarsApplication {
                 resyncActorsButton.disabled = false;
             }
         });
+
+        const removalRequestsButton = html.querySelector("button[name='removal-requests']");
+        removalRequestsButton?.addEventListener("click", async (event) => {
+            event.preventDefault();
+            new SkillRemovalRequestManager().render(true);
+        });
+
         html.querySelectorAll("button[name='edit']").forEach((button) => {
             button.addEventListener("click", async (event) => {
                 event.preventDefault();

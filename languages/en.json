@@ -18,6 +18,10 @@
                 "name": "Players Can't Remove Points",
                 "hint": "Players won't be able to remove points from skills they already unlocked"
             },
+            "playersRequestSkillRemoval": {
+                "name": "Players Request Skill Removal",
+                "hint": "When Players Can't Remove Points is enabled, right-clicking an unlocked skill submits a GM approval request instead of removing it."
+            },
             "autoSkillPointsByLevel": {
                 "name": "Auto Skill Points from Level",
                 "hint": "Automatically sets actor skill points from their level using the settings below."
@@ -43,6 +47,11 @@
                 "name": "Skill Points by Level Table",
                 "label": "Configure Level Table",
                 "hint": "Configure skill points per level using a row-based table."
+            },
+            "skill-removal-request-manager": {
+                "name": "Skill Removal Requests",
+                "label": "Review Removal Requests",
+                "hint": "Review and approve or reject player requests to remove unlocked skills."
             }
         },
         "skill-tree-actor": {
@@ -55,7 +64,9 @@
             "cost": "Cost:",
             "toggle-fullscreen": "Toggle Fullscreen",
             "item-not-found": "Item not found: %s",
-            "build": "Build"
+            "build": "Build",
+            "removal-request-created": "Skill removal request sent to the GM.",
+            "removal-request-duplicate": "A pending removal request already exists for this skill."
         },
         "skill-tree-build-config": {
             "title": "Point Build Configuration",
@@ -113,9 +124,24 @@
             "permissions": "Permissions",
             "delete": "Delete",
             "resync-actors": "Resync All Actors",
+            "removal-requests": "Skill Removal Requests",
             "resync-complete": "Resync complete: %u of %p actors updated.",
             "resync-failed": "Failed to resync actors. See console for details.",
             "resync-unavailable": "Resync API is unavailable. Reload the world and try again."
+        },
+        "skill-removal-request-manager": {
+            "title": "Skill Removal Requests",
+            "actor": "Actor",
+            "skill": "Skill",
+            "build": "Build",
+            "requested-by": "Requested By",
+            "requested-at": "Requested At",
+            "actions": "Actions",
+            "empty": "No pending skill removal requests.",
+            "approved": "Skill removal request approved.",
+            "rejected": "Skill removal request rejected.",
+            "unknown-skill": "Unknown Skill",
+            "unknown-user": "Unknown User"
         },
         "skill-tree-application": {
             "title": "Skill Tree Editor: ",

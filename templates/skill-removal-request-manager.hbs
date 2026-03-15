@@ -1,0 +1,37 @@
+<div style="max-height: 70vh;">
+    {{#if hasRequests}}
+    <table>
+        <thead>
+            <tr>
+                <th>{{localize "skill-tree.skill-removal-request-manager.actor"}}</th>
+                <th>{{localize "skill-tree.skill-removal-request-manager.skill"}}</th>
+                <th>{{localize "skill-tree.skill-removal-request-manager.build"}}</th>
+                <th>{{localize "skill-tree.skill-removal-request-manager.requested-by"}}</th>
+                <th>{{localize "skill-tree.skill-removal-request-manager.requested-at"}}</th>
+                <th>{{localize "skill-tree.skill-removal-request-manager.actions"}}</th>
+            </tr>
+        </thead>
+        <tbody>
+            {{#each requests as |request|}}
+            <tr>
+                <td>{{request.actorName}}</td>
+                <td>{{request.skillName}}</td>
+                <td>{{request.buildName}}</td>
+                <td>{{request.requestedByName}}</td>
+                <td>{{request.requestedAt}}</td>
+                <td>
+                    <button type="button" name="approve-request" data-actor-id="{{request.actorId}}" data-request-id="{{request.id}}">
+                        <i class="fas fa-check"></i>
+                    </button>
+                    <button type="button" name="reject-request" data-actor-id="{{request.actorId}}" data-request-id="{{request.id}}">
+                        <i class="fas fa-xmark"></i>
+                    </button>
+                </td>
+            </tr>
+            {{/each}}
+        </tbody>
+    </table>
+    {{else}}
+    <p>{{localize "skill-tree.skill-removal-request-manager.empty"}}</p>
+    {{/if}}
+</div>

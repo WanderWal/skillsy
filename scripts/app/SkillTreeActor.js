@@ -310,6 +310,110 @@ export function getSkillTreePoints(actor, skillTree, options = {}) {
 
 }
 
+function getActorSkillRemovalRequests(actor) {
+    const requests = actor?.getFlag(MODULE_ID, "skillRemovalRequests") ?? [];
+    if (!Array.isArray(requests)) return [];
+    return requests;
+}
+
+async function setActorSkillRemovalRequests(actor, requests) {
+    await actor.setFlag(MODULE_ID, "skillRemovalRequests", requests);
+}
+
+async function removeLinkedItemsFromActorForSkill(actor, skillUuid) {
+    const skillPage = skillUuid ? await fromUuid(skillUuid) : null;
+    if (!skillPage || skillPage.documentName !== "JournalEntryPage") return;
+
+    const skillData = mergeClone(DEFAULT_SKILL_DATA, skillPage.flags[MODULE_ID]);
+    const itemUuids = Array.isArray(skillData.itemUuids) ? skillData.itemUuids : [];
+    if (!itemUuids.length) return;
+
+    const removeIds = [];
+    for (const uuid of itemUuids) {
+        const item = await fromUuid(uuid);
+        if (!item) continue;
+        const matching = actor.items.getName(item.name);
+        if (!matching) continue;
+        removeIds.push(matching.id);
+    }
+
+    if (removeIds.length) await actor.deleteEmbeddedDocuments("Item", removeIds);
+}
+
+async function approveSkillRemovalRequest(actor, request) {
+    const skillUuid = request?.skillUuid;
+    if (!skillUuid) return false;
+
+    const buildId = request?.buildId;
+    const actorBuildSkills = actor.getFlag(MODULE_ID, "buildSkills") ?? {};
+    if (buildId && typeof actorBuildSkills === "object") {
+        const currentBuildSkills = Array.isArray(actorBuildSkills[buildId]) ? foundry.utils.deepClone(actorBuildSkills[buildId]) : [];
+        const updatedBuildSkills = currentBuildSkills.map((skill) => {
+            if (skill.uuid !== skillUuid) return skill;
+            return { ...skill, points: 0 };
+        });
+        if (JSON.stringify(currentBuildSkills) !== JSON.stringify(updatedBuildSkills)) {
+            await actor.setFlag(MODULE_ID, `buildSkills.${buildId}`, updatedBuildSkills);
+        }
+    }
+
+    const legacySkills = actor.getFlag(MODULE_ID, "skills") ?? [];
+    if (Array.isArray(legacySkills) && legacySkills.length) {
+        const updatedLegacySkills = legacySkills.map((skill) => {
+            if (skill.uuid !== skillUuid) return skill;
+            return { ...skill, points: 0 };
+        });
+        if (JSON.stringify(legacySkills) !== JSON.stringify(updatedLegacySkills)) {
+            await actor.setFlag(MODULE_ID, "skills", updatedLegacySkills);
+        }
+    }
+
+    await removeLinkedItemsFromActorForSkill(actor, skillUuid);
+    return true;
+}
+
+export async function requestSkillRemoval(actor, data = {}) {
+    if (!actor) return { ok: false, reason: "missing-actor" };
+
+    const skillUuid = typeof data.skillUuid === "string" ? data.skillUuid : "";
+    if (!skillUuid) return { ok: false, reason: "missing-skill" };
+
+    const buildId = typeof data.buildId === "string" ? data.buildId : "";
+    const requests = getActorSkillRemovalRequests(actor);
+    const existingPending = requests.find((request) => request?.status === "pending" && request?.skillUuid === skillUuid && (request?.buildId ?? "") === buildId);
+    if (existingPending) return { ok: false, reason: "duplicate" };
+
+    const request = {
+        id: foundry.utils.randomID(),
+        status: "pending",
+        skillUuid,
+        buildId,
+        skillName: data.skillName ?? "",
+        requestedByUserId: game.user.id,
+        requestedByUserName: game.user.name,
+        requestedAt: new Date().toISOString(),
+    };
+
+    requests.push(request);
+    await setActorSkillRemovalRequests(actor, requests);
+    return { ok: true, request };
+}
+
+export async function resolveSkillRemovalRequest(actor, requestId, { approve = false } = {}) {
+    if (!game.user.isGM) return { ok: false, reason: "not-gm" };
+    if (!actor || !requestId) return { ok: false, reason: "invalid" };
+
+    const requests = getActorSkillRemovalRequests(actor);
+    const request = requests.find((entry) => entry?.id === requestId && entry?.status === "pending");
+    if (!request) return { ok: false, reason: "missing-request" };
+
+    if (approve) await approveSkillRemovalRequest(actor, request);
+
+    const remaining = requests.filter((entry) => entry?.id !== requestId);
+    await setActorSkillRemovalRequests(actor, remaining);
+    return { ok: true, approved: approve };
+}
+
 export class SkillTreeActor extends HandlebarsApplication {
     constructor(actor) {
         super();
@@ -548,6 +652,21 @@ export class SkillTreeActor extends HandlebarsApplication {
                 const skillUuid = skillContainer.dataset.uuid;
                 const skill = this.skills.get(skillUuid);
                 if (!skill.points.value) return;
+
+                if (!game.user.isGM && getSetting("playersCantRemovePoints") && getSetting("playersRequestSkillRemoval")) {
+                    dbOperationsPending = true;
+                    const requestResult = await requestSkillRemoval(this.actor, {
+                        skillUuid,
+                        buildId: this.activeBuildId,
+                        skillName: skill.skill?.name ?? "",
+                    });
+                    if (requestResult.ok) ui.notifications.info(l(`${MODULE_ID}.skill-tree-actor.removal-request-created`));
+                    else if (requestResult.reason === "duplicate") ui.notifications.warn(l(`${MODULE_ID}.skill-tree-actor.removal-request-duplicate`));
+                    dbOperationsPending = false;
+                    this.render(true);
+                    return;
+                }
+
                 dbOperationsPending = true;
                 await skill.modifyPoints(-1);
                 dbOperationsPending = false;
@@ -576,6 +695,7 @@ export class SkillTreeActor extends HandlebarsApplication {
     }
 
     async drawLinks() {
+        if (!this.skillTree) return;
         const groups = this.skillTree.getFlag(MODULE_ID, "groups") ?? [];
         const pages = Array.from(this.skillTree.pages);
         const rectCache = {};
