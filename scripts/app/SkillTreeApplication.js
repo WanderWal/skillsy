@@ -939,22 +939,23 @@ export class SkillTreeApplication extends HandlebarsApplication {
     }
 
     setupSkillFormInteractivity() {
-        // Make linked item tags open their item sheets on click
-        const itemUuidsContainer = this.element.querySelector(`document-tags[name="flags.${MODULE_ID}.itemUuids"]`);
-        if (itemUuidsContainer) {
-            itemUuidsContainer.addEventListener("click", async (event) => {
-                if (event.target.closest("[data-action='delete'], .remove, .delete")) return;
-                const tag = event.target.closest(".tag");
-                if (!tag) return;
-                const uuid = tag.dataset.uuid;
-                if (!uuid) return;
-                const item = await fromUuid(uuid);
-                item?.sheet?.render(true);
-            });
-            itemUuidsContainer.querySelectorAll(".tag").forEach((tag) => {
-                tag.style.cursor = "pointer";
-            });
-        }
+        // Make linked item tags open their item sheets on click.
+        // Use capture-phase delegation from the form root so we fire regardless of
+        // how document-tags handles its own internal clicks or when it populates.
+        this.element.addEventListener("click", async (event) => {
+            if (event.target.closest("[data-action='remove'],[data-action='delete'],.remove,.delete")) return;
+            const docTags = event.target.closest("document-tags");
+            if (!docTags) return;
+            const fieldName = docTags.name ?? docTags.getAttribute("name") ?? "";
+            if (!fieldName.includes("itemUuids")) return;
+            // Foundry v13 renders tags as <li data-uuid="..."> inside document-tags
+            const tag = event.target.closest("li[data-uuid],[data-uuid]");
+            if (!tag) return;
+            const uuid = tag.dataset.uuid;
+            if (!uuid) return;
+            const item = await fromUuid(uuid);
+            item?.sheet?.render(true);
+        }, true); // capture phase ensures we fire before document-tags' own handlers
 
         const table = this.element.querySelector(".skill-requirements");
         const addButton = table.querySelector("button[name='add-requirement']");

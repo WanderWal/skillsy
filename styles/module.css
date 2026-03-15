@@ -137,6 +137,8 @@
 .skill-tree-application .form-footer select[name='active-skill-tree'] {
   min-width: 12rem;
   width: 12rem;
+  background: var(--input-background-color);
+  color: var(--input-text-color, var(--color-light-1));
 }
 .skill-tree-application div[data-application-part=content],
 .skill-tree-actor div[data-application-part=content] {

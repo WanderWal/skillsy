@@ -988,7 +988,10 @@ class Skill {
             }
         }
         await this.actor.deleteEmbeddedDocuments("Item", removeIds);
-        Item.implementation.create(itemsToAdd, { parent: this.actor });
+        if (itemsToAdd.length) {
+            const createData = itemsToAdd.map((item) => item.toObject());
+            await this.actor.createEmbeddedDocuments("Item", createData);
+        }
         if (removeIds.length > 0) ui.notifications.info(l(`${MODULE_ID}.skill-tree-actor.removed-items`) + removed.map((i) => i.name).join(", "));
         if (itemsToAdd.length > 0) ui.notifications.info(l(`${MODULE_ID}.skill-tree-actor.added-items`) + itemsToAdd.map((i) => i.name).join(", "));
         if (itemsToAdd.length && !soundPlayed) this.playSound();
