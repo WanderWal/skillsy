@@ -191,6 +191,12 @@ Hooks.on("updateItem", (item) => {
     syncActorSkillPointsByLevel(item.actor);
 });
 
+Hooks.on("createActor", (actor) => {
+    if (actor.type !== "character") return;
+    if (!getSetting("autoSkillPointsByLevel")) return;
+    void syncActorSkillPointsByLevel(actor);
+});
+
 function getActorFromSheetApp(app) {
     return app?.actor ?? app?.document ?? app?.object ?? null;
 }

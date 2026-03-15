@@ -6,6 +6,7 @@ import { DEFAULT_SKILL_DATA, SKILL_LINE_WIDTH, SkillTreeApplication, reverseOper
 import {getSetting, setSetting} from "../settings.js";
 
 let dbOperationsPending = false;
+const PLUTONIUM_SUPPRESS_CREATE_SHEET_ITEM_HOOK_KEY = "_isSuppressCreateSheetItemHook";
 
 function normalizeStringList(values) {
     const list = Array.isArray(values) ? values : [values];
@@ -1149,19 +1150,48 @@ class Skill {
         const knownIds = new Set(Array.from(this.actor.items ?? []).map((item) => item.id));
 
         for (const sourceItem of itemsToAdd) {
-            const dropPayload = {
-                type: "Item",
-                uuid: sourceItem.uuid,
+            const dropPayload = typeof sourceItem.toDragData === "function"
+                ? sourceItem.toDragData()
+                : {
+                    type: "Item",
+                    uuid: sourceItem.uuid,
+                    id: sourceItem.id,
+                    documentName: sourceItem.documentName,
+                };
+
+            dropPayload.type ??= "Item";
+            dropPayload.uuid ??= sourceItem.uuid;
+            dropPayload.id ??= sourceItem.id;
+            dropPayload.documentName ??= sourceItem.documentName ?? "Item";
+            if (sourceItem.pack) dropPayload.pack ??= sourceItem.pack;
+            if (game.modules.get("plutonium")?.active) {
+                dropPayload[PLUTONIUM_SUPPRESS_CREATE_SHEET_ITEM_HOOK_KEY] = true;
+            }
+
+            const serializedPayload = JSON.stringify(dropPayload);
+            const dataTransfer = {
+                dropEffect: "copy",
+                effectAllowed: "copy",
+                files: [],
+                items: [],
+                types: ["text/plain", "text", "application/json"],
+                getData: (format) => {
+                    if (["text/plain", "text", "application/json"].includes(format)) return serializedPayload;
+                    return "";
+                },
+                setData() {},
+                clearData() {},
             };
 
             const fakeEvent = {
                 preventDefault() {},
                 stopPropagation() {},
-                dataTransfer: {
-                    getData: () => JSON.stringify(dropPayload),
-                },
+                stopImmediatePropagation() {},
+                dataTransfer,
                 target: sheet?.element,
                 currentTarget: sheet?.element,
+                srcElement: sheet?.element,
+                view: window,
             };
 
             let result = null;
