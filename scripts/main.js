@@ -288,6 +288,7 @@ async function injectSkillTreeTab(app, rendered) {
         const firstNavItem = nav.querySelector(`[data-group="${tabGroup}"][data-tab]`) ?? nav.querySelector("[data-tab]");
         ensuredNavItem = document.createElement("button");
         ensuredNavItem.className = firstNavItem?.className ?? "item";
+        ensuredNavItem.classList.remove("active");
         ensuredNavItem.dataset.tab = SKILL_TREE_SHEET_TAB;
         ensuredNavItem.dataset.group = tabGroup;
         ensuredNavItem.type = "button";
@@ -306,6 +307,11 @@ async function injectSkillTreeTab(app, rendered) {
         ensuredTabPanel.dataset.group = tabGroup;
         ensuredTabPanel.innerHTML = `<div class="skill-tree-actor skill-tree-sheet-tab-content"></div>`;
         existingPanel.parentElement.appendChild(ensuredTabPanel);
+    }
+
+    if (!skillTreeActiveActorUuids.has(actor.uuid)) {
+        ensuredNavItem.classList.remove("active");
+        ensuredTabPanel.classList.remove("active");
     }
 
     if (!nav.dataset.skillTreeTabTrackerBound) {
