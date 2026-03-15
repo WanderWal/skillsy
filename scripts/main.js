@@ -7,6 +7,9 @@ import { getSetting, registerSettings } from "./settings.js";
 
 import { MODULE_ID } from "./consts.js";
 
+const SKILL_TREE_SHEET_TAB = "skill-tree";
+const skillTreeActiveActorUuids = new Set();
+
 function getNumeric(value) {
     if (!Number.isFinite(Number(value))) return null;
     return parseInt(value);
@@ -188,50 +191,164 @@ Hooks.on("updateItem", (item) => {
     syncActorSkillPointsByLevel(item.actor);
 });
 
-Hooks.on("getActorSheetHeaderButtons", (app, buttons) => {
-    if (!app.object.hasPlayerOwner && getSetting("playerOwnedOnly")) return;
-    if (app.object.isOwner) {
-        const skillTrees = game.journal
-            .filter((j) => j.getFlag(MODULE_ID, "isSkillTree"))
-            .filter((j) => j.testUserPermission(game.user, CONST.DOCUMENT_OWNERSHIP_LEVELS.OBSERVER))
-            .filter((j) => skillTreeMatchesActorRequirements(j, app.object));
-        const selectedSkillTree = app.object.getFlag(MODULE_ID, "selectedSkillTree") ?? skillTrees[0]?.uuid;
+function getActorFromSheetApp(app) {
+    return app?.actor ?? app?.document ?? app?.object ?? null;
+}
 
+function canRenderSkillTreeTab(actor) {
+    if (!actor) return false;
+    if (actor.type !== "character") return false;
+    if (!actor.isOwner) return false;
+    if (!actor.hasPlayerOwner && getSetting("playerOwnedOnly")) return false;
+    return true;
+}
 
-        buttons.unshift({
-            label: `${MODULE_ID}.header-button.label`,
-            class: "skill-tree-header-button",
-            icon: "fas fa-code-branch",
-            onclick: () => {
-                if (!selectedSkillTree) return ui.notifications.warn(l(`${MODULE_ID}.skill-tree-actor.no-skill-trees`));
-                const skillTree = fromUuidSync(selectedSkillTree) ?? skillTrees[0];
-                if (!skillTree) return ui.notifications.warn(l(`${MODULE_ID}.skill-tree-actor.no-skill-tree`));
-                new SkillTreeActor(app.object).render(true);
-            },
-        });
+function getSheetRootElement(rendered) {
+    if (!rendered) return null;
+    if (rendered instanceof HTMLElement) return rendered;
+    if (rendered[0] instanceof HTMLElement) return rendered[0];
+    return null;
+}
+
+function getPrimaryTabGroup(root) {
+    const firstTab = root?.querySelector(".tab[data-group][data-tab]");
+    if (!firstTab) return "primary";
+    return firstTab.dataset.group ?? "primary";
+}
+
+function getNavigationElement(root) {
+    return root.querySelector("nav.sheet-navigation.tabs, nav.tabs")
+        ?? root.querySelector(".tabs[data-group]")?.closest("nav")
+        ?? null;
+}
+
+async function renderSkillTreeTabContent(actor, tabPanel) {
+    if (!tabPanel) return;
+    tabPanel.dataset.loading = "true";
+
+    const content = tabPanel.querySelector(".skill-tree-sheet-tab-content");
+    if (!content) {
+        tabPanel.dataset.loading = "false";
+        return;
     }
+
+    const app = new SkillTreeActor(actor, {
+        registerHooks: false,
+        onRequestRender: async () => {
+            await renderSkillTreeTabContent(actor, tabPanel);
+        },
+    });
+
+    try {
+        const context = await app._prepareContext({});
+        if (!app.skillTree) {
+            content.innerHTML = `<p>${l(`${MODULE_ID}.skill-tree-actor.no-skill-trees`)}</p>`;
+            return;
+        }
+
+        content.innerHTML = await renderTemplate(SkillTreeActor.PARTS.content.template, context);
+        app.activateContent(content);
+    } finally {
+        tabPanel.dataset.loading = "false";
+    }
+}
+
+function activateSheetTab(root, tabName, tabGroup) {
+    root.querySelectorAll(`[data-group="${tabGroup}"][data-tab]`).forEach((item) => {
+        const isActive = item.dataset.tab === tabName;
+        item.classList.toggle("active", isActive);
+    });
+}
+
+async function injectSkillTreeTab(app, rendered) {
+    const actor = getActorFromSheetApp(app);
+    if (!canRenderSkillTreeTab(actor)) return;
+
+    const root = getSheetRootElement(rendered);
+    if (!root) return;
+
+    const nav = getNavigationElement(root);
+    if (!nav) return;
+
+    const tabGroup = getPrimaryTabGroup(root);
+    const matchingButtons = Array.from(nav.querySelectorAll(`[data-group="${tabGroup}"][data-tab="${SKILL_TREE_SHEET_TAB}"]`));
+    const matchingPanels = Array.from(root.querySelectorAll(`.tab[data-group="${tabGroup}"][data-tab="${SKILL_TREE_SHEET_TAB}"]`));
+
+    const navItem = matchingButtons.shift() ?? null;
+    if (matchingButtons.length) matchingButtons.forEach((button) => button.remove());
+
+    const tabPanel = matchingPanels.shift() ?? null;
+    if (matchingPanels.length) matchingPanels.forEach((panel) => panel.remove());
+
+    const existingPanel = root.querySelector(`.tab[data-group="${tabGroup}"][data-tab]`);
+    if (!existingPanel?.parentElement) return;
+
+    let ensuredNavItem = navItem;
+    if (!ensuredNavItem) {
+        const firstNavItem = nav.querySelector(`[data-group="${tabGroup}"][data-tab]`) ?? nav.querySelector("[data-tab]");
+        ensuredNavItem = document.createElement("button");
+        ensuredNavItem.className = firstNavItem?.className ?? "item";
+        ensuredNavItem.dataset.tab = SKILL_TREE_SHEET_TAB;
+        ensuredNavItem.dataset.group = tabGroup;
+        ensuredNavItem.type = "button";
+        ensuredNavItem.title = l(`${MODULE_ID}.header-button.label`);
+        ensuredNavItem.setAttribute("aria-label", l(`${MODULE_ID}.header-button.label`));
+        ensuredNavItem.innerHTML = `<i class="fas fa-code-branch"></i>`;
+        nav.appendChild(ensuredNavItem);
+    }
+
+    let ensuredTabPanel = tabPanel;
+    if (!ensuredTabPanel) {
+        const panelTag = existingPanel.tagName.toLowerCase();
+        ensuredTabPanel = document.createElement(panelTag);
+        ensuredTabPanel.className = "tab skill-tree-sheet-tab";
+        ensuredTabPanel.dataset.tab = SKILL_TREE_SHEET_TAB;
+        ensuredTabPanel.dataset.group = tabGroup;
+        ensuredTabPanel.innerHTML = `<div class="skill-tree-actor skill-tree-sheet-tab-content"></div>`;
+        existingPanel.parentElement.appendChild(ensuredTabPanel);
+    }
+
+    if (!nav.dataset.skillTreeTabTrackerBound) {
+        nav.addEventListener("click", (event) => {
+            const clickedTab = event.target?.closest?.(`[data-group="${tabGroup}"][data-tab]`);
+            if (!clickedTab) return;
+            const clickedTabName = clickedTab.dataset.tab;
+            if (clickedTabName) activateSheetTab(root, clickedTabName, tabGroup);
+            if (clickedTab.dataset.tab === SKILL_TREE_SHEET_TAB) skillTreeActiveActorUuids.add(actor.uuid);
+            else skillTreeActiveActorUuids.delete(actor.uuid);
+        });
+        nav.dataset.skillTreeTabTrackerBound = "true";
+    }
+
+    if (!ensuredNavItem.dataset.skillTreeBound) {
+        ensuredNavItem.addEventListener("click", async (event) => {
+            event.preventDefault();
+            skillTreeActiveActorUuids.add(actor.uuid);
+            activateSheetTab(root, SKILL_TREE_SHEET_TAB, tabGroup);
+            if (ensuredTabPanel.dataset.loading === "true") return;
+            await renderSkillTreeTabContent(actor, ensuredTabPanel);
+        });
+        ensuredNavItem.dataset.skillTreeBound = "true";
+    }
+
+    if (skillTreeActiveActorUuids.has(actor.uuid)) {
+        activateSheetTab(root, SKILL_TREE_SHEET_TAB, tabGroup);
+        if (ensuredTabPanel.dataset.loading !== "true") await renderSkillTreeTabContent(actor, ensuredTabPanel);
+    }
+}
+
+Hooks.on("renderActorSheet", (app, html) => {
+    injectSkillTreeTab(app, html);
 });
 
-Hooks.on("getHeaderControlsActorSheetV2", (app, buttons) => {
-    if (!app.document.hasPlayerOwner && getSetting("playerOwnedOnly")) return;
-    if (app.document.isOwner) {
-        const skillTrees = game.journal
-            .filter((j) => j.getFlag(MODULE_ID, "isSkillTree"))
-            .filter((j) => j.testUserPermission(game.user, CONST.DOCUMENT_OWNERSHIP_LEVELS.OBSERVER))
-            .filter((j) => skillTreeMatchesActorRequirements(j, app.document));
-        const selectedSkillTree = app.document.getFlag(MODULE_ID, "selectedSkillTree") ?? skillTrees[0]?.uuid;
+Hooks.on("renderActorSheetV2", (app, element) => {
+    injectSkillTreeTab(app, element);
+});
 
+Hooks.on("renderActorSheet5eCharacter", (app, html) => {
+    injectSkillTreeTab(app, html);
+});
 
-        buttons.push({
-            label: `${MODULE_ID}.header-button.label`,
-            class: "skill-tree-header-button",
-            icon: "fas fa-code-branch",
-            onClick: () => {
-                if (!selectedSkillTree) return ui.notifications.warn(l(`${MODULE_ID}.skill-tree-actor.no-skill-trees`));
-                const skillTree = fromUuidSync(selectedSkillTree) ?? skillTrees[0];
-                if (!skillTree) return ui.notifications.warn(l(`${MODULE_ID}.skill-tree-actor.no-skill-tree`));
-                new SkillTreeActor(app.document).render(true);
-            },
-        });
-    }
+Hooks.on("renderActorSheet5eCharacter2", (app, element) => {
+    injectSkillTreeTab(app, element);
 });

@@ -623,4 +623,35 @@
   gap: 0.5rem;
   padding-top: 0.25rem;
 }
+
+.skill-tree-sheet-tab {
+  overflow: hidden;
+  width: 100%;
+  max-width: 100%;
+}
+
+.skill-tree-sheet-tab .skill-tree-sheet-tab-content {
+  height: 100%;
+  width: 100%;
+  max-width: 100%;
+  overflow: auto;
+  padding: 0.5rem;
+}
+
+.skill-tree-sheet-tab .skill-tree-sheet-tab-content .standard-form {
+  width: 100%;
+}
+
+.skill-tree-sheet-tab .skill-tree-sheet-tab-content .skill-groups {
+  width: min-content;
+  min-width: 0;
+  margin-inline: auto;
+}
+
+nav.sheet-navigation.tabs [data-tab="skill-tree"] {
+  min-width: 2rem;
+  width: 2rem;
+  justify-content: center;
+  padding-inline: 0;
+}
 /*# sourceMappingURL=module.css.map */

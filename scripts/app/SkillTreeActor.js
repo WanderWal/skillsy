@@ -415,19 +415,28 @@ export async function resolveSkillRemovalRequest(actor, requestId, { approve = f
 }
 
 export class SkillTreeActor extends HandlebarsApplication {
-    constructor(actor) {
+    constructor(actor, options = {}) {
         super();
+        const { registerHooks = true, onRequestRender } = options;
         this.actor = typeof actor === "string" ? fromUuidSync(actor) : actor;
+        this._onRequestRender = typeof onRequestRender === "function" ? onRequestRender : null;
         this.skills = new Map();
-        this.hookId = Hooks.on("updateJournalEntry", (document, update) => {
-            if (document === this.skillTree) this.render(true);
-        });
-        this.pageHookId = Hooks.on("updateJournalEntryPage", (document, update) => {
-            if (document.parent === this.skillTree) this.render(true);
-        });
-        this.actorHookId = Hooks.on("updateActor", (document, update) => {
-            if (document === this.actor) this.render(true);
-        });
+        if (registerHooks) {
+            this.hookId = Hooks.on("updateJournalEntry", (document, update) => {
+                if (document === this.skillTree) this.requestRender();
+            });
+            this.pageHookId = Hooks.on("updateJournalEntryPage", (document, update) => {
+                if (document.parent === this.skillTree) this.requestRender();
+            });
+            this.actorHookId = Hooks.on("updateActor", (document, update) => {
+                if (document === this.actor) this.requestRender();
+            });
+        }
+    }
+
+    requestRender() {
+        if (this._onRequestRender) return this._onRequestRender();
+        return this.render(true);
     }
 
     static get LINKED_SKILL_RULE() {
@@ -607,7 +616,11 @@ export class SkillTreeActor extends HandlebarsApplication {
 
     _onRender(context, options) {
         super._onRender(context, options);
-        const html = this.element;
+        this.activateContent(this.element);
+    }
+
+    activateContent(html) {
+        if (!html) return;
 
         const selector = html.querySelector(".skill-tree-selector");
         const menuToggle = html.querySelector("button[name='toggle-skill-tree-menu']");
@@ -636,7 +649,7 @@ export class SkillTreeActor extends HandlebarsApplication {
                         return;
                     }
                     await this.actor.setFlag(MODULE_ID, "selectedSkillTree", selectedUuid);
-                    this.render(true);
+                    this.requestRender();
                 });
             });
 
@@ -663,14 +676,14 @@ export class SkillTreeActor extends HandlebarsApplication {
                     if (requestResult.ok) ui.notifications.info(l(`${MODULE_ID}.skill-tree-actor.removal-request-created`));
                     else if (requestResult.reason === "duplicate") ui.notifications.warn(l(`${MODULE_ID}.skill-tree-actor.removal-request-duplicate`));
                     dbOperationsPending = false;
-                    this.render(true);
+                    this.requestRender();
                     return;
                 }
 
                 dbOperationsPending = true;
                 await skill.modifyPoints(-1);
                 dbOperationsPending = false;
-                this.render(true);
+                this.requestRender();
             });
             skillContainer.addEventListener("click", async (event) => {
                 event.preventDefault();
@@ -681,27 +694,30 @@ export class SkillTreeActor extends HandlebarsApplication {
                 dbOperationsPending = true;
                 await skill.modifyPoints(1);
                 dbOperationsPending = false;
-                this.render(true);
+                this.requestRender();
             });
         });
 
-        this.drawLinks();
+        this.drawLinks(html);
     }
 
-    getSkillRect(skillUuid) {
-        const el = this.element.querySelector(`.skill-container[data-uuid="${skillUuid}"]`);
+    getSkillRect(skillUuid, root = this.element) {
+        if (!root) return null;
+        const el = root.querySelector(`.skill-container[data-uuid="${skillUuid}"]`);
         if (!el) return null;
         return el.getBoundingClientRect();
     }
 
-    async drawLinks() {
+    async drawLinks(root = this.element) {
         if (!this.skillTree) return;
+        if (!root) return;
         const groups = this.skillTree.getFlag(MODULE_ID, "groups") ?? [];
         const pages = Array.from(this.skillTree.pages);
         const rectCache = {};
         for (const group of groups) {
             const skills = pages.filter((p) => p.getFlag(MODULE_ID, "groupId") === group.id);
-            const element = this.element.querySelector(`.skill-group[data-group-id="${group.id}"]`);
+            const element = root.querySelector(`.skill-group[data-group-id="${group.id}"]`);
+            if (!element) continue;
 
             //Draw lines between linked skills
             const svgCanvas = document.createElementNS("http://www.w3.org/2000/svg", "svg");
@@ -712,12 +728,12 @@ export class SkillTreeActor extends HandlebarsApplication {
             svgCanvas.setAttribute("viewBox", `0 0 ${elementRect.width} ${elementRect.height}`);
             element.appendChild(svgCanvas);
             for (const skill of skills) {
-                const skillRect = rectCache[skill.uuid] ?? this.getSkillRect(skill.uuid);
+                const skillRect = rectCache[skill.uuid] ?? this.getSkillRect(skill.uuid, root);
                 if (skillRect) rectCache[skill.uuid] = skillRect;
                 const linked = skill.getFlag(MODULE_ID, "connectedSkills") ?? [];
                 for (const linkedSkill of linked) {
                     try {
-                        const linkedSkillRect = rectCache[linkedSkill] ?? this.getSkillRect(linkedSkill);
+                        const linkedSkillRect = rectCache[linkedSkill] ?? this.getSkillRect(linkedSkill, root);
                         if(!linkedSkillRect) continue;
                         const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
                         const x1 = skillRect.x + skillRect.width / 2 - elementRect.x;
@@ -743,9 +759,9 @@ export class SkillTreeActor extends HandlebarsApplication {
 
     _onClose(options) {
         super._onClose(options);
-        Hooks.off("updateJournalEntry", this.hookId);
-        Hooks.off("updateJournalEntryPage", this.pageHookId);
-        Hooks.off("updateActor", this.actorHookId);
+        if (this.hookId) Hooks.off("updateJournalEntry", this.hookId);
+        if (this.pageHookId) Hooks.off("updateJournalEntryPage", this.pageHookId);
+        if (this.actorHookId) Hooks.off("updateActor", this.actorHookId);
     }
 
     toggleFullscreen(toggle) {
