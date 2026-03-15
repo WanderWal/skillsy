@@ -988,13 +988,97 @@ class Skill {
             }
         }
         await this.actor.deleteEmbeddedDocuments("Item", removeIds);
+        let createdItems = [];
         if (itemsToAdd.length) {
-            const createData = itemsToAdd.map((item) => item.toObject());
-            await this.actor.createEmbeddedDocuments("Item", createData);
+            createdItems = await this.createItemsViaActorDrop(itemsToAdd);
+            if (!createdItems.length) {
+                const createData = itemsToAdd.map((item) => item.toObject());
+                createdItems = await this.actor.createEmbeddedDocuments("Item", createData);
+            }
         }
         if (removeIds.length > 0) ui.notifications.info(l(`${MODULE_ID}.skill-tree-actor.removed-items`) + removed.map((i) => i.name).join(", "));
         if (itemsToAdd.length > 0) ui.notifications.info(l(`${MODULE_ID}.skill-tree-actor.added-items`) + itemsToAdd.map((i) => i.name).join(", "));
         if (itemsToAdd.length && !soundPlayed) this.playSound();
+    }
+
+    async createItemsViaActorDrop(itemsToAdd = []) {
+        if (game.system?.id !== "dnd5e") return [];
+        const sheet = this.actor?.sheet;
+        const dropRoot = sheet?._onDrop;
+        const dropItem = sheet?._onDropItem;
+        const dropCreate = sheet?._onDropItemCreate;
+        if (typeof dropRoot !== "function" && typeof dropItem !== "function" && typeof dropCreate !== "function") return [];
+
+        const createdItems = [];
+        const knownIds = new Set(Array.from(this.actor.items ?? []).map((item) => item.id));
+
+        for (const sourceItem of itemsToAdd) {
+            const dropPayload = {
+                type: "Item",
+                uuid: sourceItem.uuid,
+            };
+
+            const fakeEvent = {
+                preventDefault() {},
+                stopPropagation() {},
+                dataTransfer: {
+                    getData: () => JSON.stringify(dropPayload),
+                },
+                target: sheet?.element,
+                currentTarget: sheet?.element,
+            };
+
+            let result = null;
+            if (typeof dropRoot === "function") {
+                try {
+                    result = await dropRoot.call(sheet, fakeEvent);
+                } catch (e) {
+                    result = null;
+                }
+            }
+
+            if (result === null && typeof dropItem === "function") {
+                try {
+                    result = await dropItem.call(sheet, fakeEvent, dropPayload);
+                } catch (e) {
+                    result = null;
+                }
+            }
+
+            if (result === null && typeof dropCreate === "function") {
+                const itemData = sourceItem.toObject();
+                if (!itemData.flags) itemData.flags = {};
+                if (!itemData.flags.core) itemData.flags.core = {};
+                if (!itemData.flags.core.sourceId) itemData.flags.core.sourceId = sourceItem.uuid;
+                try {
+                    result = await dropCreate.call(sheet, itemData);
+                } catch (e) {
+                    result = null;
+                }
+            }
+
+            if (Array.isArray(result)) {
+                for (const created of result) {
+                    if (created?.documentName !== "Item") continue;
+                    if (knownIds.has(created.id)) continue;
+                    knownIds.add(created.id);
+                    createdItems.push(created);
+                }
+            } else if (result?.documentName === "Item") {
+                if (!knownIds.has(result.id)) {
+                    knownIds.add(result.id);
+                    createdItems.push(result);
+                }
+            }
+
+            const freshItems = Array.from(this.actor.items ?? []).filter((item) => !knownIds.has(item.id));
+            for (const freshItem of freshItems) {
+                knownIds.add(freshItem.id);
+                createdItems.push(freshItem);
+            }
+        }
+
+        return createdItems;
     }
 
     playSound() {
