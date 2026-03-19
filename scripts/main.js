@@ -324,8 +324,6 @@ async function injectSkillTreeTab(app, rendered) {
         nav.addEventListener("click", (event) => {
             const clickedTab = event.target?.closest?.(`[data-group="${tabGroup}"][data-tab]`);
             if (!clickedTab) return;
-            const clickedTabName = clickedTab.dataset.tab;
-            if (clickedTabName) activateSheetTab(root, clickedTabName, tabGroup);
             if (clickedTab.dataset.tab === SKILL_TREE_SHEET_TAB) skillTreeActiveActorUuids.add(actor.uuid);
             else skillTreeActiveActorUuids.delete(actor.uuid);
         });
@@ -336,7 +334,8 @@ async function injectSkillTreeTab(app, rendered) {
         ensuredNavItem.addEventListener("click", async (event) => {
             event.preventDefault();
             skillTreeActiveActorUuids.add(actor.uuid);
-            activateSheetTab(root, SKILL_TREE_SHEET_TAB, tabGroup);
+            if (typeof app.changeTab === "function") app.changeTab(SKILL_TREE_SHEET_TAB, tabGroup);
+            else activateSheetTab(root, SKILL_TREE_SHEET_TAB, tabGroup);
             if (ensuredTabPanel.dataset.loading === "true") return;
             await renderSkillTreeTabContent(actor, ensuredTabPanel);
         });
@@ -344,7 +343,8 @@ async function injectSkillTreeTab(app, rendered) {
     }
 
     if (skillTreeActiveActorUuids.has(actor.uuid)) {
-        activateSheetTab(root, SKILL_TREE_SHEET_TAB, tabGroup);
+        if (typeof app.changeTab === "function") app.changeTab(SKILL_TREE_SHEET_TAB, tabGroup);
+        else activateSheetTab(root, SKILL_TREE_SHEET_TAB, tabGroup);
         if (ensuredTabPanel.dataset.loading !== "true") await renderSkillTreeTabContent(actor, ensuredTabPanel);
     }
 }

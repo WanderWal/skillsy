@@ -628,18 +628,22 @@
   overflow: hidden;
   width: 100%;
   max-width: 100%;
+  min-width: 0;
 }
 
 .skill-tree-sheet-tab .skill-tree-sheet-tab-content {
   height: 100%;
   width: 100%;
   max-width: 100%;
+  min-width: 0;
   overflow: auto;
   padding: 0.5rem;
 }
 
 .skill-tree-sheet-tab .skill-tree-sheet-tab-content .standard-form {
-  width: 100%;
+  width: max-content;
+  min-width: 100%;
+  margin-inline: auto;
 }
 
 .skill-tree-sheet-tab .skill-tree-sheet-tab-content .skill-groups {
