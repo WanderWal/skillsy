@@ -1,0 +1,80 @@
+{
+    "skill-tree": {
+        "header-button": {
+            "label": "Árvore de habilidades"
+        },
+        "settings": {
+            "skill-tree-manager": {
+                "hint": "Gerencie suas árvores de habilidades",
+                "label": "Configurar árvores de habilidades",
+                "name": "Gerenciador de árvore de habilidades"
+            }
+        },
+        "skill-tree-actor": {
+            "added-items": "Itens adicionados:",
+            "mutual-exclusion-info": "Apenas %n habilidades com os mesmos requisitos desta habilidade podem ser desbloqueadas ao mesmo tempo.",
+            "removed-items": "Itens removidos:",
+            "title": "Árvore de habilidades:"
+        },
+        "skill-tree-application": {
+            "delete-group-content": "Tem certeza de que deseja excluir este grupo? \nIsso também excluirá todas as habilidades do grupo.",
+            "delete-group-title": "Excluir grupo",
+            "drop-error": "Você só pode soltar itens ou outras habilidades na grade",
+            "edit-group-blur-background": "Desfocar fundo",
+            "edit-group-blur-background-hint": "Se deve desfocar a imagem de fundo",
+            "edit-group-color": "Cor",
+            "edit-group-color-hint": "A cor do grupo",
+            "edit-group-image": "Imagem de fundo",
+            "edit-group-image-hint": "A imagem a ser usada como plano de fundo do grupo",
+            "edit-group-min-cols": "Colunas Mínimas",
+            "edit-group-min-cols-hint": "O número mínimo de colunas na grade",
+            "edit-group-min-rows": "Linhas Mínimas",
+            "edit-group-min-rows-hint": "O número mínimo de linhas na grade",
+            "edit-group-name": "Nome",
+            "edit-group-name-hint": "O nome do grupo",
+            "edit-group-sound": "Efeito sonoro",
+            "edit-group-sound-hint": "O efeito sonoro a ser reproduzido quando uma habilidade é desbloqueada",
+            "edit-group-submit": "Salvar",
+            "edit-group-title": "Editar grupo:",
+            "edit-skill-condition-script": "Script de Condição",
+            "edit-skill-condition-script-hint": "Um script que será verificado para determinar se esta habilidade pode ser desbloqueada. \nO script deve retornar um valor booleano. \nVocê pode fazer referência a ator, habilidade, grupo e habilidadeTree na macro.",
+            "edit-skill-connected-skills": "Habilidades necessárias",
+            "edit-skill-connected-skills-hint": "Habilidades necessárias para desbloquear esta habilidade. \nSegue a regra de habilidade exigida.",
+            "edit-skill-image": "Imagem",
+            "edit-skill-item": "Itens vinculados",
+            "edit-skill-item-hint": "Quando uma habilidade é desbloqueada, seus itens vinculados são adicionados ao ator; \nquando removidos, os itens também são removidos. \nPara habilidades que exigem vários pontos, os itens são concedidos com base nos pontos gastos. \nPor exemplo, com uma habilidade de 3 pontos e 3 itens, um item é concedido por ponto. \nSe forem necessários 5 pontos para 3 itens, será concedido um item para cada 2 pontos, sendo o último item atribuído no quinto ponto.",
+            "edit-skill-linked-skill-rule": "Substituição de regra de habilidade necessária",
+            "edit-skill-linked-skill-rule-hint": "Se definido como um número maior que 0, isso substituirá a regra de habilidade necessária e exigirá que o número especificado de habilidades necessárias (ou mais) seja desbloqueado para que esta habilidade seja desbloqueada",
+            "edit-skill-mutual-exclusion": "Exclusão Mútua",
+            "edit-skill-mutual-exclusion-hint": "Se definido como um número maior que 1, apenas o número especificado de habilidades exigidas pela mesma habilidade que esta pode ser desbloqueada ao mesmo tempo",
+            "edit-skill-name": "Nome",
+            "edit-skill-on-unlock": "Ao alterar o script",
+            "edit-skill-on-unlock-hint": "Um script que será executado quando esta habilidade for desbloqueada ou quando um ponto for gasto. \nVocê pode fazer referência a ator, habilidade, grupo e habilidadeTree na macro.",
+            "edit-skill-points": "Pontos",
+            "edit-skill-points-hint": "O número de pontos necessários para desbloquear esta habilidade.",
+            "edit-skill-title": "Editar habilidade:",
+            "linked-skill-rule": "Regra de habilidade necessária",
+            "linked-skill-rule-all": "Todos",
+            "linked-skill-rule-hint": "Como as habilidades necessárias devem se comportar:<br> - Algumas: apenas uma habilidade necessária é necessária para desbloquear uma habilidade<br> - Todas: todas as habilidades necessárias devem ser desbloqueadas para que uma habilidade seja desbloqueada",
+            "linked-skill-rule-some": "Alguns",
+            "multiple-items-rule": "Regra de vários itens",
+            "multiple-items-rule-all": "Todos",
+            "multiple-items-rule-hint": "Como múltiplos itens devem se comportar em habilidades de níveis:<br> - Todos: Todos os itens são concedidos<br> - Um: Somente o item correspondente ao nível atual é concedido",
+            "multiple-items-rule-one": "Um",
+            "new-group": "Novo grupo",
+            "skill-style": "Estilo de habilidade",
+            "skill-style-circle": "Círculo",
+            "skill-style-hint": "Como as habilidades devem ser exibidas:<br> - Círculo: as habilidades são exibidas como círculos<br> - Quadrado: as habilidades são exibidas como quadrados",
+            "skill-style-square": "Quadrado",
+            "skill-tree-options": "Opções de árvore de habilidades",
+            "title": "Editor de árvore de habilidades:"
+        },
+        "skill-tree-manager": {
+            "create-new": "Criar novo",
+            "delete": "Excluir",
+            "edit": "Editar",
+            "name": "Nome",
+            "title": "Gerenciador de árvore de habilidades"
+        }
+    }
+}

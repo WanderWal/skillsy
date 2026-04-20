@@ -1,0 +1,67 @@
+<div class="standard-form">
+
+    <nav>
+        <div class="skill-tree-selector">
+            <button type="button" class="skill-tree-menu-toggle" name="toggle-skill-tree-menu" aria-expanded="false">
+                <h1>{{skillTreeName}}</h1>
+                <i class="fas fa-caret-down"></i>
+            </button>
+            <div class="skill-tree-menu" role="menu">
+                {{#each skillTreesOptions as |skillTree|}}
+                <button type="button" name="select-skill-tree" data-value="{{skillTree.key}}" class="{{#if skillTree.selected}}active{{/if}}">
+                    {{localize skillTree.label}}
+                </button>
+                {{/each}}
+            </div>
+        </div>
+
+        <div class="input-wrapper">
+        <input style="{{#unless canEditPoints}}pointer-events: none;{{/unless}}{{#if pointsImage}}background-image: url('{{pointsImage}}');{{/if}}" type="number" name="skillPoints" value="{{skillPoints}}" {{#unless canEditPoints}}readonly{{/unless}} />
+        <span>{{skillTreePoints}}</span>
+        </div>
+    </nav>
+
+    <div class="skill-groups">
+        {{#each groups as |group|}}
+        <div class="skill-group {{#if group.blurBackground}}blur-background{{/if}}"
+            style="--group-color: {{group.color}}; background-image: url('{{group.image}}');"
+            data-group-id="{{group.id}}">
+
+            {{#if group.image}}
+            <img class="group-background {{#if group.blurBackground}}blur-background{{/if}}" src="{{group.image}}"
+                alt="{{group.name}}" title="{{group.name}}" />
+            {{/if}}
+
+            <div class="h1-container">
+                {{#unless group.hideTotal}}
+                <span>{{group.totalPoints}}</span>
+                {{/unless}}
+                <h1>{{group.name}}</h1>
+            </div>
+
+
+            <div class="skill-grid" style="grid-template: {{group.gridTemplate}};">
+                {{#each group.children as |skill|}}
+                {{#if skill.name}}
+                <div class="skill-container {{#if skill.skillHelper.overrideStyle}}{{skill.skillHelper.overrideStyleClass}}{{else}}{{#if ../../useCircleStyle}}round{{/if}}{{/if}} {{#if skill.skillHelper.excluded}}excluded{{/if}} {{#if skill.skillHelper.canBeUnlocked}}can-be-unlocked{{/if}} {{#if skill.skillHelper.isUnlocked}}is-unlocked{{/if}}"
+                    data-row="{{skill.row}}" data-col="{{skill.col}}" data-uuid="{{skill.uuid}}"
+                    data-tooltip-class="skill-tree-tooltip" data-tooltip="{{skill.tooltip}}"
+                    style="{{#if skill.skillHelper.skillData.color}}--group-color: {{skill.skillHelper.skillData.color}}; {{/if}}"
+                    >
+                    <img src="{{skill.src}}" alt="{{skill.name}}" title="{{skill.name}}" />
+                    {{#if skill.skillHelper.showNodeBadge}}
+                    <span title="{{skill.skillHelper.nodeBadgeTitle}}">{{skill.skillHelper.nodeBadgeText}}</span>
+                    {{/if}}
+                </div>
+                {{else}}
+                <div class="skill-container empty" data-row="{{skill.row}}" data-col="{{skill.col}}">
+                </div>
+                {{/if}}
+                {{/each}}
+            </div>
+
+
+        </div>
+        {{/each}}
+    </div>
+</div>

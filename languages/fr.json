@@ -1,0 +1,80 @@
+{
+    "skill-tree": {
+        "header-button": {
+            "label": "Arbre de compétences"
+        },
+        "settings": {
+            "skill-tree-manager": {
+                "hint": "Gérez vos arbres de compétences",
+                "label": "Configurer les arbres de compétences",
+                "name": "Gestionnaire d'arbre de compétences"
+            }
+        },
+        "skill-tree-actor": {
+            "added-items": "Éléments ajoutés :",
+            "mutual-exclusion-info": "Seules %n compétences ayant les mêmes exigences que cette compétence peuvent être débloquées en même temps.",
+            "removed-items": "Éléments supprimés :",
+            "title": "Arbre de compétences :"
+        },
+        "skill-tree-application": {
+            "delete-group-content": "Êtes-vous sûr de vouloir supprimer ce groupe ? \nCela supprimera également toutes les compétences du groupe.",
+            "delete-group-title": "Supprimer le groupe",
+            "drop-error": "Vous ne pouvez déposer que des objets ou d'autres compétences sur la grille",
+            "edit-group-blur-background": "Arrière-plan flou",
+            "edit-group-blur-background-hint": "S'il faut flouter l'image d'arrière-plan",
+            "edit-group-color": "Couleur",
+            "edit-group-color-hint": "La couleur du groupe",
+            "edit-group-image": "Image d'arrière-plan",
+            "edit-group-image-hint": "L'image à utiliser comme arrière-plan pour le groupe",
+            "edit-group-min-cols": "Colonnes minimales",
+            "edit-group-min-cols-hint": "Le nombre minimum de colonnes dans la grille",
+            "edit-group-min-rows": "Lignes minimales",
+            "edit-group-min-rows-hint": "Le nombre minimum de lignes dans la grille",
+            "edit-group-name": "Nom",
+            "edit-group-name-hint": "Le nom du groupe",
+            "edit-group-sound": "Effet sonore",
+            "edit-group-sound-hint": "L'effet sonore à jouer lorsqu'une compétence est débloquée",
+            "edit-group-submit": "Sauvegarder",
+            "edit-group-title": "Modifier le groupe :",
+            "edit-skill-condition-script": "Script de conditions",
+            "edit-skill-condition-script-hint": "Un script qui sera vérifié pour déterminer si cette compétence peut être débloquée. \nLe script doit renvoyer une valeur booléenne. \nVous pouvez référencer l'acteur, la compétence, le groupe et le skillsTree dans la macro.",
+            "edit-skill-connected-skills": "Compétences requises",
+            "edit-skill-connected-skills-hint": "Compétences requises pour débloquer cette compétence. \nSuit la règle de compétence requise.",
+            "edit-skill-image": "Image",
+            "edit-skill-item": "Articles liés",
+            "edit-skill-item-hint": "Lorsqu'une compétence est débloquée, ses éléments liés sont ajoutés à l'acteur ; \nune fois supprimés, les éléments sont également supprimés. \nPour les compétences nécessitant plusieurs points, les objets sont accordés en fonction des points dépensés. \nPar exemple, avec une compétence à 3 points et 3 objets, un objet est accordé par point. \nSi 5 points sont requis pour 3 éléments, un élément est accordé tous les 2 points, le dernier élément étant attribué sur le cinquième point.",
+            "edit-skill-linked-skill-rule": "Remplacement des règles de compétence requises",
+            "edit-skill-linked-skill-rule-hint": "S'il est défini sur un nombre supérieur à 0, cela remplacera la règle de compétence requise et nécessitera que le nombre spécifié de compétences requises (ou plus) soit débloqué pour que cette compétence soit déverrouillée.",
+            "edit-skill-mutual-exclusion": "Exclusion mutuelle",
+            "edit-skill-mutual-exclusion-hint": "Si défini sur un nombre supérieur à 1, seul le nombre spécifié de compétences requises par la même compétence que celle-ci peut être débloquée en même temps.",
+            "edit-skill-name": "Nom",
+            "edit-skill-on-unlock": "Sur le script de modification",
+            "edit-skill-on-unlock-hint": "Un script qui sera exécuté lorsque cette compétence sera débloquée ou lorsqu'un point sera dépensé. \nVous pouvez référencer l'acteur, la compétence, le groupe et le skillsTree dans la macro.",
+            "edit-skill-points": "Points",
+            "edit-skill-points-hint": "Le nombre de points requis pour débloquer cette compétence.",
+            "edit-skill-title": "Modifier la compétence :",
+            "linked-skill-rule": "Règle de compétence requise",
+            "linked-skill-rule-all": "Tous",
+            "linked-skill-rule-hint": "Comment les compétences requises doivent se comporter :<br> - Certaines : une seule compétence requise est requise pour débloquer une compétence<br> - Toutes : toutes les compétences requises doivent être débloquées pour qu'une compétence soit débloquée.",
+            "linked-skill-rule-some": "Quelques",
+            "multiple-items-rule": "Règle d'éléments multiples",
+            "multiple-items-rule-all": "Tous",
+            "multiple-items-rule-hint": "Comment doivent se comporter plusieurs objets dans les compétences à plusieurs niveaux :<br> - Tous : tous les objets sont accordés<br> - Un : seul l'objet correspondant au niveau actuel est accordé",
+            "multiple-items-rule-one": "Un",
+            "new-group": "Nouveau groupe",
+            "skill-style": "Style de compétence",
+            "skill-style-circle": "Cercle",
+            "skill-style-hint": "Comment les compétences doivent être affichées :<br> - Cercle : les compétences sont affichées sous forme de cercles<br> - Carré : les compétences sont affichées sous forme de carrés",
+            "skill-style-square": "Carré",
+            "skill-tree-options": "Options de l'arbre de compétences",
+            "title": "Éditeur d'arbre de compétences :"
+        },
+        "skill-tree-manager": {
+            "create-new": "Créer nouveau",
+            "delete": "Supprimer",
+            "edit": "Modifier",
+            "name": "Nom",
+            "title": "Gestionnaire d'arbre de compétences"
+        }
+    }
+}

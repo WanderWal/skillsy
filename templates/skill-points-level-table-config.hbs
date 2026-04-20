@@ -1,0 +1,41 @@
+<div class="standard-form">
+    <p>{{localize "skill-tree.skill-points-level-table-config.hint"}}</p>
+
+    <table>
+        <thead>
+            <tr>
+                <th>{{localize "skill-tree.skill-points-level-table-config.level"}}</th>
+                <th>{{localize "skill-tree.skill-points-level-table-config.type"}}</th>
+                <th>{{localize "skill-tree.skill-points-level-table-config.value"}}</th>
+                <th>{{localize "skill-tree.skill-points-level-table-config.actions"}}</th>
+            </tr>
+        </thead>
+        <tbody>
+            {{#if hasRows}}
+            {{#each rows as |row|}}
+            <tr class="level-table-row" data-id="{{row.id}}">
+                <td><input type="number" name="level" min="1" step="1" value="{{row.level}}" /></td>
+                <td>
+                    <select name="type">
+                        <option value="absolute" {{#unless row.relative}}selected{{/unless}}>{{localize "skill-tree.skill-points-level-table-config.type-absolute"}}</option>
+                        <option value="relative" {{#if row.relative}}selected{{/if}}>{{localize "skill-tree.skill-points-level-table-config.type-relative"}}</option>
+                    </select>
+                </td>
+                <td><input type="number" name="amount" step="1" value="{{row.amount}}" /></td>
+                <td><button type="button" name="delete-row" data-id="{{row.id}}"><i class="fas fa-trash"></i></button></td>
+            </tr>
+            {{/each}}
+            {{else}}
+            <tr>
+                <td colspan="4">{{localize "skill-tree.skill-points-level-table-config.empty"}}</td>
+            </tr>
+            {{/if}}
+        </tbody>
+    </table>
+
+    <footer>
+        <button type="button" name="add-row"><i class="fas fa-plus"></i> {{localize "skill-tree.skill-points-level-table-config.add-row"}}</button>
+        <button type="button" name="save"><i class="fas fa-save"></i> {{localize "skill-tree.skill-points-level-table-config.save"}}</button>
+        <button type="button" name="cancel"><i class="fas fa-times"></i> {{localize "skill-tree.skill-points-level-table-config.cancel"}}</button>
+    </footer>
+</div>
